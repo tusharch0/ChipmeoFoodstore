@@ -10,6 +10,9 @@ public sealed record CreateOrganizationRequest(
     string? Address = null,
     string? City = null,
     string? Phone = null,
+    string? OpeningHoursJson = null,
+    string? TaxSettingsJson = null,
+    string? KitchenRouting = null,
     Guid? OwnerUserId = null);
 
 public sealed record CreateBranchRequest(
@@ -17,7 +20,20 @@ public sealed record CreateBranchRequest(
     string Code,
     string? Address = null,
     string? City = null,
-    string? Phone = null);
+    string? Phone = null,
+    string? OpeningHoursJson = null,
+    string? TaxSettingsJson = null,
+    string? KitchenRouting = null);
+
+public sealed record UpdateBranchRequest(
+    string Name,
+    string? Address = null,
+    string? City = null,
+    string? Phone = null,
+    string? OpeningHoursJson = null,
+    string? TaxSettingsJson = null,
+    string? KitchenRouting = null,
+    bool IsActive = true);
 
 public sealed record OrganizationDto(
     Guid Id,
@@ -37,4 +53,7 @@ public sealed record BranchDto(
     string? Address,
     string? City,
     string? Phone,
-    bool IsActive);
+    bool IsActive,
+    string? OpeningHoursJson,
+    string? TaxSettingsJson,
+    string? KitchenRouting);

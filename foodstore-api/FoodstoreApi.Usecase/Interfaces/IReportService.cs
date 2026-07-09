@@ -9,6 +9,7 @@ public interface IReportService
     Task<SalesForecastDto> GetForecastAsync(int horizon = 7, CancellationToken cancellationToken = default);
     Task<DashboardLegacyDto> GetDashboardStatsAsync(CancellationToken cancellationToken = default);
     Task<List<ComboRecommendationDto>> GetComboRecommendationsAsync(CancellationToken cancellationToken = default);
+    Task<FinancialReportDto> GetFinancialReportAsync(FinancialReportRequest request, CancellationToken cancellationToken = default);
 }
 
 

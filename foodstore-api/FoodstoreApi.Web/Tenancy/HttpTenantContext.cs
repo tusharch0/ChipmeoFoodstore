@@ -11,6 +11,12 @@ public sealed class HttpTenantContext(IHttpContextAccessor httpContextAccessor) 
         ? branchId
         : null;
 
+    public Guid? OrganizationId => Guid.TryParse(_user?.FindFirst("organization_id")?.Value, out var organizationId)
+        ? organizationId
+        : null;
+
+    public bool IsOrganizationOwner => string.Equals(_user?.FindFirst("organization_role")?.Value, "owner", StringComparison.OrdinalIgnoreCase);
+
     public bool IsPlatformOperator => bool.TryParse(_user?.FindFirst("is_platform_operator")?.Value, out var isPlatformOperator)
         && isPlatformOperator;
 

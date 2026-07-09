@@ -48,11 +48,13 @@ public class AuthService(
 
         var role = await _roleManager.FindByIdAsync(employee.RoleId.ToString());
         var isPlatformOperator = string.Equals(role?.Name, "root", StringComparison.OrdinalIgnoreCase);
+        var organizationRole = "";
         if (!isPlatformOperator && employee.Branch?.Organization is { IsActive: true } organization)
         {
-            var hasMembership = await _organizationRepository.HasActiveMembershipAsync(user.Id, organization.Id, cancellationToken);
-            if (!hasMembership)
+            var membership = await _organizationRepository.GetActiveMembershipAsync(user.Id, organization.Id, cancellationToken);
+            if (membership is null)
                 return null;
+            organizationRole = membership.Role;
         }
 
         var permissionClaims = role != null
@@ -64,7 +66,7 @@ public class AuthService(
             .Select(c => c.Value)
             .ToList();
 
-        var token = GenerateJwtToken(user, employee, permissions, isPlatformOperator);
+        var token = GenerateJwtToken(user, employee, permissions, isPlatformOperator, organizationRole);
         var expiresIn = _jwtSettings.ExpiryInHours * 3600;
 
         return new LoginResponse
@@ -206,7 +208,7 @@ public class AuthService(
         };
     }
 
-    private string GenerateJwtToken(ApplicationUser user, Employee employee, List<string> permissions, bool isPlatformOperator)
+    private string GenerateJwtToken(ApplicationUser user, Employee employee, List<string> permissions, bool isPlatformOperator, string organizationRole)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -227,6 +229,7 @@ public class AuthService(
         {
             claims.Add(new Claim("branch_id", employee.Branch.Id.ToString()));
             claims.Add(new Claim("organization_id", employee.Branch.OrganizationId.ToString()));
+            claims.Add(new Claim("organization_role", organizationRole));
         }
 
         foreach (var permission in permissions)

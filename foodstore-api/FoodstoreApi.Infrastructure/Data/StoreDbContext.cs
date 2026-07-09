@@ -1,5 +1,6 @@
 ﻿using FoodstoreApi.Core.Entities;
 using FoodstoreApi.Core.Entities.Identity;
+using FoodstoreApi.Core.Entities.Finance;
 using FoodstoreApi.Usecase.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -55,6 +56,15 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
     public virtual DbSet<EInvoiceSetting> EInvoiceSettings => Set<EInvoiceSetting>();
     public virtual DbSet<PaymentIntent> PaymentIntents => Set<PaymentIntent>();
     public virtual DbSet<PaymentEvent> PaymentEvents => Set<PaymentEvent>();
+    public virtual DbSet<LedgerAccount> LedgerAccounts => Set<LedgerAccount>();
+    public virtual DbSet<LedgerJournal> LedgerJournals => Set<LedgerJournal>();
+    public virtual DbSet<LedgerJournalLine> LedgerJournalLines => Set<LedgerJournalLine>();
+    public virtual DbSet<FinancePolicy> FinancePolicies => Set<FinancePolicy>();
+    public virtual DbSet<FinanceAdjustmentRequest> FinanceAdjustmentRequests => Set<FinanceAdjustmentRequest>();
+    public virtual DbSet<SettlementBatch> SettlementBatches => Set<SettlementBatch>();
+    public virtual DbSet<SettlementLine> SettlementLines => Set<SettlementLine>();
+    public virtual DbSet<ReconciliationCase> ReconciliationCases => Set<ReconciliationCase>();
+    public virtual DbSet<ReportAccessLog> ReportAccessLogs => Set<ReportAccessLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -97,6 +107,9 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.Property(e => e.Address).HasMaxLength(500).HasColumnName("address");
             entity.Property(e => e.City).HasMaxLength(100).HasColumnName("city");
             entity.Property(e => e.Phone).HasMaxLength(30).HasColumnName("phone");
+            entity.Property(e => e.OpeningHoursJson).HasColumnType("jsonb").HasColumnName("opening_hours");
+            entity.Property(e => e.TaxSettingsJson).HasColumnType("jsonb").HasColumnName("tax_settings");
+            entity.Property(e => e.KitchenRouting).HasMaxLength(200).HasColumnName("kitchen_routing");
             entity.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
             entity.ConfigureAudit();
             entity.HasIndex(e => new { e.OrganizationId, e.Code }).IsUnique();
@@ -870,6 +883,80 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
                 .WithMany(p => p.Events)
                 .HasForeignKey(e => e.PaymentIntentId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ReportAccessLog>(entity =>
+        {
+            entity.ToTable("report_access_logs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
+            entity.Property(e => e.ActorId).HasColumnName("actor_id");
+            entity.Property(e => e.ReportType).HasMaxLength(50).HasColumnName("report_type");
+            entity.Property(e => e.FromDate).HasColumnName("from_date");
+            entity.Property(e => e.ToDate).HasColumnName("to_date");
+            entity.Property(e => e.IsExport).HasColumnName("is_export");
+            entity.ConfigureAudit();
+            entity.HasIndex(e => new { e.OrganizationId, e.CreatedAt });
+        });
+
+        modelBuilder.Entity<LedgerAccount>(entity =>
+        {
+            entity.ToTable("ledger_accounts"); entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.Code).HasMaxLength(80).HasColumnName("code"); entity.Property(e => e.Name).HasMaxLength(160).HasColumnName("name");
+            entity.Property(e => e.AccountType).HasMaxLength(30).HasColumnName("account_type"); entity.Property(e => e.Currency).HasMaxLength(3).HasColumnName("currency");
+            entity.Property(e => e.IsSystem).HasColumnName("is_system"); entity.Property(e => e.IsActive).HasColumnName("is_active"); entity.ConfigureAudit();
+            entity.HasIndex(e => new { e.OrganizationId, e.Code, e.Currency }).IsUnique();
+        });
+        modelBuilder.Entity<LedgerJournal>(entity =>
+        {
+            entity.ToTable("ledger_journals"); entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.OrganizationId).HasColumnName("organization_id"); entity.Property(e => e.BranchId).HasColumnName("branch_id");
+            entity.Property(e => e.Currency).HasMaxLength(3).HasColumnName("currency"); entity.Property(e => e.EntryType).HasMaxLength(50).HasColumnName("entry_type");
+            entity.Property(e => e.SourceType).HasMaxLength(50).HasColumnName("source_type"); entity.Property(e => e.SourceId).HasColumnName("source_id");
+            entity.Property(e => e.Description).HasMaxLength(500).HasColumnName("description"); entity.Property(e => e.PostedAt).HasColumnName("posted_at");
+            entity.Property(e => e.ReversalOfJournalId).HasColumnName("reversal_of_journal_id"); entity.Property(e => e.ActorId).HasColumnName("actor_id"); entity.ConfigureAudit();
+            entity.HasIndex(e => new { e.SourceType, e.SourceId }).IsUnique(); entity.HasIndex(e => new { e.OrganizationId, e.PostedAt });
+        });
+        modelBuilder.Entity<LedgerJournalLine>(entity =>
+        {
+            entity.ToTable("ledger_journal_lines"); entity.HasKey(e => e.Id); entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.JournalId).HasColumnName("journal_id"); entity.Property(e => e.AccountId).HasColumnName("account_id");
+            entity.Property(e => e.Debit).HasColumnType("decimal(18,2)").HasColumnName("debit"); entity.Property(e => e.Credit).HasColumnType("decimal(18,2)").HasColumnName("credit");
+            entity.Property(e => e.Memo).HasMaxLength(500).HasColumnName("memo"); entity.ConfigureAudit(); entity.HasIndex(e => e.AccountId);
+            entity.HasOne(e => e.Journal).WithMany(e => e.Lines).HasForeignKey(e => e.JournalId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Account).WithMany().HasForeignKey(e => e.AccountId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<FinancePolicy>(entity =>
+        {
+            entity.ToTable("finance_policies"); entity.HasKey(e => e.Id); entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.CommissionMode).HasMaxLength(20).HasColumnName("commission_mode"); entity.Property(e => e.CommissionValue).HasColumnType("decimal(18,2)").HasColumnName("commission_value");
+            entity.Property(e => e.ProviderFeeMode).HasMaxLength(20).HasColumnName("provider_fee_mode"); entity.Property(e => e.ProviderFeeValue).HasColumnType("decimal(18,2)").HasColumnName("provider_fee_value");
+            entity.Property(e => e.FeeBearer).HasMaxLength(20).HasColumnName("fee_bearer"); entity.Property(e => e.SettlementMode).HasMaxLength(20).HasColumnName("settlement_mode");
+            entity.Property(e => e.ManualAdjustmentApprovalLimit).HasColumnType("decimal(18,2)").HasColumnName("manual_adjustment_approval_limit"); entity.Property(e => e.IsActive).HasColumnName("is_active"); entity.ConfigureAudit(); entity.HasIndex(e => e.OrganizationId).IsUnique();
+            entity.Property(e => e.MinimumPayoutThreshold).HasColumnType("decimal(18,2)").HasColumnName("minimum_payout_threshold"); entity.Property(e => e.SettlementCalendar).HasMaxLength(20).HasColumnName("settlement_calendar"); entity.Property(e => e.TaxTreatment).HasMaxLength(20).HasColumnName("tax_treatment"); entity.Property(e => e.TaxRate).HasColumnType("decimal(18,2)").HasColumnName("tax_rate");
+        });
+        modelBuilder.Entity<SettlementBatch>(entity =>
+        {
+            entity.ToTable("settlement_batches"); entity.HasKey(e => e.Id); entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.OrganizationId).HasColumnName("organization_id"); entity.Property(e => e.Currency).HasMaxLength(3).HasColumnName("currency"); entity.Property(e => e.PeriodDate).HasColumnName("period_date"); entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
+            entity.Property(e => e.GrossSales).HasColumnType("decimal(18,2)").HasColumnName("gross_sales"); entity.Property(e => e.Refunds).HasColumnType("decimal(18,2)").HasColumnName("refunds"); entity.Property(e => e.ProviderFees).HasColumnType("decimal(18,2)").HasColumnName("provider_fees"); entity.Property(e => e.Commissions).HasColumnType("decimal(18,2)").HasColumnName("commissions"); entity.Property(e => e.Adjustments).HasColumnType("decimal(18,2)").HasColumnName("adjustments"); entity.Property(e => e.Holds).HasColumnType("decimal(18,2)").HasColumnName("holds"); entity.Property(e => e.NetAmount).HasColumnType("decimal(18,2)").HasColumnName("net_amount");
+            entity.Property(e => e.IdempotencyKey).HasMaxLength(120).HasColumnName("idempotency_key"); entity.Property(e => e.PayoutReference).HasMaxLength(120).HasColumnName("payout_reference"); entity.Property(e => e.FailureReason).HasMaxLength(500).HasColumnName("failure_reason"); entity.Property(e => e.ReviewedBy).HasColumnName("reviewed_by"); entity.Property(e => e.ApprovedBy).HasColumnName("approved_by"); entity.Property(e => e.PaidBy).HasColumnName("paid_by"); entity.Property(e => e.ReviewedAt).HasColumnName("reviewed_at"); entity.Property(e => e.ApprovedAt).HasColumnName("approved_at"); entity.Property(e => e.PaidAt).HasColumnName("paid_at"); entity.ConfigureAudit(); entity.HasIndex(e => e.IdempotencyKey).IsUnique(); entity.HasIndex(e => new { e.OrganizationId, e.PeriodDate, e.Currency }).IsUnique();
+        });
+        modelBuilder.Entity<SettlementLine>(entity =>
+        {
+            entity.ToTable("settlement_lines"); entity.HasKey(e => e.Id); entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.SettlementBatchId).HasColumnName("settlement_batch_id"); entity.Property(e => e.PaymentIntentId).HasColumnName("payment_intent_id"); entity.Property(e => e.GrossAmount).HasColumnType("decimal(18,2)").HasColumnName("gross_amount"); entity.Property(e => e.CommissionAmount).HasColumnType("decimal(18,2)").HasColumnName("commission_amount"); entity.Property(e => e.ProviderFeeAmount).HasColumnType("decimal(18,2)").HasColumnName("provider_fee_amount"); entity.Property(e => e.NetAmount).HasColumnType("decimal(18,2)").HasColumnName("net_amount"); entity.ConfigureAudit(); entity.HasIndex(e => e.PaymentIntentId).IsUnique(); entity.HasOne(e => e.SettlementBatch).WithMany(e => e.Lines).HasForeignKey(e => e.SettlementBatchId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<ReconciliationCase>(entity =>
+        {
+            entity.ToTable("reconciliation_cases"); entity.HasKey(e => e.Id); entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.OrganizationId).HasColumnName("organization_id"); entity.Property(e => e.SettlementBatchId).HasColumnName("settlement_batch_id"); entity.Property(e => e.SourceType).HasMaxLength(50).HasColumnName("source_type"); entity.Property(e => e.SourceReference).HasMaxLength(160).HasColumnName("source_reference"); entity.Property(e => e.InternalAmount).HasColumnType("decimal(18,2)").HasColumnName("internal_amount"); entity.Property(e => e.ExternalAmount).HasColumnType("decimal(18,2)").HasColumnName("external_amount"); entity.Property(e => e.Currency).HasMaxLength(3).HasColumnName("currency"); entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status"); entity.Property(e => e.EvidenceUrl).HasMaxLength(500).HasColumnName("evidence_url"); entity.Property(e => e.Resolution).HasMaxLength(1000).HasColumnName("resolution"); entity.Property(e => e.ResolvedBy).HasColumnName("resolved_by"); entity.Property(e => e.ResolvedAt).HasColumnName("resolved_at"); entity.ConfigureAudit(); entity.HasIndex(e => new { e.OrganizationId, e.Status });
+        });
+        modelBuilder.Entity<FinanceAdjustmentRequest>(entity =>
+        {
+            entity.ToTable("finance_adjustment_requests"); entity.HasKey(e => e.Id); entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.OrganizationId).HasColumnName("organization_id"); entity.Property(e => e.LedgerAccountId).HasColumnName("ledger_account_id");
+            entity.Property(e => e.Amount).HasColumnType("decimal(18,2)").HasColumnName("amount"); entity.Property(e => e.Currency).HasMaxLength(3).HasColumnName("currency"); entity.Property(e => e.ReasonCode).HasMaxLength(50).HasColumnName("reason_code"); entity.Property(e => e.Reason).HasMaxLength(500).HasColumnName("reason"); entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
+            entity.Property(e => e.RequestedBy).HasColumnName("requested_by"); entity.Property(e => e.ApprovedBy).HasColumnName("approved_by"); entity.Property(e => e.ApprovedAt).HasColumnName("approved_at"); entity.Property(e => e.JournalId).HasColumnName("journal_id"); entity.ConfigureAudit(); entity.HasIndex(e => new { e.OrganizationId, e.Status });
         });
 
         OnModelCreatingPartial(modelBuilder);

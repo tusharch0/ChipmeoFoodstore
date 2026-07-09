@@ -6,6 +6,8 @@ namespace FoodstoreApi.Usecase.Interfaces;
 public interface ITenantContext
 {
     Guid? BranchId { get; }
+    Guid? OrganizationId { get; }
+    bool IsOrganizationOwner { get; }
     bool IsPlatformOperator { get; }
     bool IsSystem { get; }
     string CacheScope { get; }

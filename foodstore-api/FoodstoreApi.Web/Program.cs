@@ -115,6 +115,7 @@ builder.Services.Configure<IntaSendOptions>(builder.Configuration.GetSection(Int
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 builder.Services.AddHostedService<FoodstoreApi.Web.BackgroundServices.PaymentEventWorker>();
+builder.Services.AddHostedService<FoodstoreApi.Web.BackgroundServices.SettlementWorker>();
 
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
     ?? throw new InvalidOperationException("JwtSettings not configured");

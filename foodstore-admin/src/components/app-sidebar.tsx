@@ -25,6 +25,7 @@ import {
   TruckIcon,
   ClipboardListIcon,
   CreditCardIcon,
+  Landmark,
   PercentIcon,
   BookOpenIcon,
   SmartphoneIcon,
@@ -33,6 +34,7 @@ import {
   RadioIcon,
   Trophy,
   ReceiptTextIcon,
+  Building2,
 } from "lucide-react"
 
 type Module = "food" | "employees" | "crm" | "cms"
@@ -133,6 +135,8 @@ const foodNav: {
       { title: "Settings", url: "/admin/food/e-invoice/settings" },
     ],
   },
+  { title: "Finance", icon: <Landmark />, items: [{ title: "Wallet & Ledger", url: "/admin/food/finance/dashboard" }, { title: "Financial Reports", url: "/admin/food/reports/dashboard" }, { title: "Operations", url: "/admin/food/finance/operations" }, { title: "Settlements", url: "/admin/food/settlements/dashboard" }] },
+  { title: "Branches", url: "/admin/food/organizations/dashboard", icon: <Building2 /> },
 ]
 
 const employeeNav = [

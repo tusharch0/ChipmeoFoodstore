@@ -10,6 +10,7 @@ public interface IReportRepository
     Task<List<SalesDataDto>> GetSalesDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default);
     Task<DashboardLegacyDto> GetLegacyDashboardStatsAsync(CancellationToken cancellationToken = default);
     Task<List<ComboRecommendationDataDto>> GetComboRecommendationDataAsync(DateTime fromDate, CancellationToken cancellationToken = default);
+    Task<FinancialReportDto> GetFinancialReportAsync(FinancialReportRequest request, CancellationToken cancellationToken = default);
 }
 
 public class SalesDataDto

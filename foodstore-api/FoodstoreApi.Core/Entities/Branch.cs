@@ -12,6 +12,9 @@ public class Branch : IAuditableEntity
     public string? Address { get; set; }
     public string? City { get; set; }
     public string? Phone { get; set; }
+    public string? OpeningHoursJson { get; set; }
+    public string? TaxSettingsJson { get; set; }
+    public string? KitchenRouting { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

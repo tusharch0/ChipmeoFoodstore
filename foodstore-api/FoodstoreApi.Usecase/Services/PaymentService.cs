@@ -13,6 +13,7 @@ public class PaymentService(
     IPaymentEventRepository eventRepo,
     IOrderRepository orderRepo,
     ICustomerService customerService,
+    ILedgerService ledgerService,
     IPaymentProviderFactory providerFactory,
     IOptions<IntaSendOptions> options,
     ILogger<PaymentService> logger) : IPaymentService
@@ -21,6 +22,7 @@ public class PaymentService(
     private readonly IPaymentEventRepository _eventRepo = eventRepo;
     private readonly IOrderRepository _orderRepo = orderRepo;
     private readonly ICustomerService _customerService = customerService;
+    private readonly ILedgerService _ledgerService = ledgerService;
     private readonly IPaymentProviderFactory _providerFactory = providerFactory;
     private readonly IntaSendOptions _options = options.Value;
     private readonly ILogger<PaymentService> _logger = logger;
@@ -340,6 +342,10 @@ public class PaymentService(
         evt.ProcessedAt = now;
         evt.ProcessingOutcome = "applied";
 
+        // The ledger repository shares this scoped DbContext with the payment repository, so
+        // the balanced journal and the payment/order transition commit or roll back together.
+        await _ledgerService.StagePaymentConfirmationAsync(intent, order, ct);
+
         await _intentRepo.PersistConfirmationAsync(intent, evt, order, payment, history, ct);
 
         // Loyalty is non-critical and only runs once (guarded by the terminal-state check above).
@@ -371,6 +377,9 @@ public class PaymentService(
 
     private async Task<PaymentEventProcessingResult> ApplyRefundedAsync(PaymentIntent intent, PaymentEvent evt, CancellationToken ct)
     {
+        var order = await _orderRepo.GetByIdAsync(intent.OrderId, ct);
+        if (order is null) return await MarkProcessed(evt, "order-missing", ct, intent.Id);
+        await _ledgerService.StageRefundAsync(intent, order, ct);
         intent.Status = PaymentIntentStatus.Refunded;
         await _intentRepo.UpdateAsync(intent, ct);
         return await MarkProcessed(evt, "applied", ct, intent.Id, intent.OrderId, intent.Status);

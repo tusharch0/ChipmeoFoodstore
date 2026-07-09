@@ -32,7 +32,9 @@ public class OrganizationService(IOrganizationRepository repository) : IOrganiza
         organization.Branches.Add(new Branch
         {
             Id = Guid.NewGuid(), Name = request.PrimaryBranchName.Trim(), Code = request.PrimaryBranchCode.Trim().ToUpperInvariant(),
-            Address = request.Address?.Trim(), City = request.City?.Trim(), Phone = request.Phone?.Trim()
+            Address = request.Address?.Trim(), City = request.City?.Trim(), Phone = request.Phone?.Trim(),
+            OpeningHoursJson = request.OpeningHoursJson?.Trim(), TaxSettingsJson = request.TaxSettingsJson?.Trim(),
+            KitchenRouting = request.KitchenRouting?.Trim()
         });
         if (request.OwnerUserId.HasValue)
         {
@@ -43,6 +45,26 @@ public class OrganizationService(IOrganizationRepository repository) : IOrganiza
         }
 
         return Map(await repository.CreateAsync(organization, cancellationToken));
+    }
+
+    public async Task<BranchDto?> UpdateBranchAsync(Guid organizationId, Guid branchId, UpdateBranchRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            throw new InvalidOperationException("Branch name is required.");
+
+        var branch = await repository.GetBranchByIdAsync(branchId, cancellationToken);
+        if (branch is null || branch.OrganizationId != organizationId)
+            return null;
+
+        branch.Name = request.Name.Trim();
+        branch.Address = request.Address?.Trim();
+        branch.City = request.City?.Trim();
+        branch.Phone = request.Phone?.Trim();
+        branch.OpeningHoursJson = request.OpeningHoursJson?.Trim();
+        branch.TaxSettingsJson = request.TaxSettingsJson?.Trim();
+        branch.KitchenRouting = request.KitchenRouting?.Trim();
+        branch.IsActive = request.IsActive;
+        return Map(await repository.UpdateBranchAsync(branch, cancellationToken));
     }
 
     public async Task<BranchDto?> AddBranchAsync(Guid organizationId, CreateBranchRequest request, CancellationToken cancellationToken = default)
@@ -57,7 +79,9 @@ public class OrganizationService(IOrganizationRepository repository) : IOrganiza
         var branch = await repository.AddBranchAsync(new Branch
         {
             Id = Guid.NewGuid(), OrganizationId = organizationId, Name = request.Name.Trim(), Code = normalizedCode,
-            Address = request.Address?.Trim(), City = request.City?.Trim(), Phone = request.Phone?.Trim()
+            Address = request.Address?.Trim(), City = request.City?.Trim(), Phone = request.Phone?.Trim(),
+            OpeningHoursJson = request.OpeningHoursJson?.Trim(), TaxSettingsJson = request.TaxSettingsJson?.Trim(),
+            KitchenRouting = request.KitchenRouting?.Trim()
         }, cancellationToken);
         return Map(branch);
     }
@@ -77,5 +101,5 @@ public class OrganizationService(IOrganizationRepository repository) : IOrganiza
         organization.CurrencyCode, organization.TimeZone, organization.IsActive,
         organization.Branches.OrderBy(e => e.Name).Select(Map).ToList());
 
-    private static BranchDto Map(Branch branch) => new(branch.Id, branch.Name, branch.Code, branch.Address, branch.City, branch.Phone, branch.IsActive);
+    private static BranchDto Map(Branch branch) => new(branch.Id, branch.Name, branch.Code, branch.Address, branch.City, branch.Phone, branch.IsActive, branch.OpeningHoursJson, branch.TaxSettingsJson, branch.KitchenRouting);
 }

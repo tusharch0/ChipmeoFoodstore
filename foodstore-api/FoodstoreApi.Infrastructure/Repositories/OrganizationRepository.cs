@@ -24,6 +24,14 @@ public class OrganizationRepository(StoreDbContext context) : IOrganizationRepos
             e => e.UserId == userId && e.OrganizationId == organizationId && e.IsActive,
             cancellationToken);
 
+    public Task<OrganizationMembership?> GetActiveMembershipAsync(Guid userId, Guid organizationId, CancellationToken cancellationToken = default) =>
+        context.OrganizationMemberships.AsNoTracking().SingleOrDefaultAsync(
+            e => e.UserId == userId && e.OrganizationId == organizationId && e.IsActive,
+            cancellationToken);
+
+    public Task<bool> BranchBelongsToOrganizationAsync(Guid branchId, Guid organizationId, CancellationToken cancellationToken = default) =>
+        context.Branches.IgnoreQueryFilters().AnyAsync(e => e.Id == branchId && e.OrganizationId == organizationId, cancellationToken);
+
     public async Task<Organization> CreateAsync(Organization organization, CancellationToken cancellationToken = default)
     {
         context.Organizations.Add(organization);
@@ -34,6 +42,16 @@ public class OrganizationRepository(StoreDbContext context) : IOrganizationRepos
     public async Task<Branch> AddBranchAsync(Branch branch, CancellationToken cancellationToken = default)
     {
         context.Branches.Add(branch);
+        await context.SaveChangesAsync(cancellationToken);
+        return branch;
+    }
+
+    public Task<Branch?> GetBranchByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        context.Branches.IgnoreQueryFilters().SingleOrDefaultAsync(e => e.Id == id, cancellationToken);
+
+    public async Task<Branch> UpdateBranchAsync(Branch branch, CancellationToken cancellationToken = default)
+    {
+        context.Branches.Update(branch);
         await context.SaveChangesAsync(cancellationToken);
         return branch;
     }

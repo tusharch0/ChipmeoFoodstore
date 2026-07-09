@@ -78,6 +78,13 @@ public static class Permissions
         new("payment.transactions.view", "View payment transactions", "Can search and view payment intents and webhook history", "payment"),
         new("payment.refund",            "Refund payments",           "Can initiate refunds on succeeded payments",             "payment"),
         new("payment.support",           "Payment support console",   "Can access the finance payment support console",         "payment"),
+        new("finance.wallet.view", "View restaurant wallets", "Can view derived wallet balances", "finance"),
+        new("finance.ledger.view", "View financial ledger", "Can view immutable journal entries", "finance"),
+        new("finance.adjust.request", "Request finance adjustments", "Can request a manual adjustment", "finance"),
+        new("finance.adjust.approve", "Approve finance adjustments", "Can approve another user's adjustment", "finance"),
+        new("settlement.view", "View settlements", "Can view settlement batches and statements", "settlement"),
+        new("settlement.generate", "Generate settlements", "Can create daily settlement drafts", "settlement"),
+        new("settlement.approve", "Approve settlements", "Can review, approve and record controlled payouts", "settlement"),
 
         // System
         new("system.view",   "Xem cài đặt hệ thống",       "Có thể xem cấu hình hệ thống",            "system"),

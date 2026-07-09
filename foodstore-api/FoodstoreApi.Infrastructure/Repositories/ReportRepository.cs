@@ -1,4 +1,5 @@
 ﻿using FoodstoreApi.Core.Constants;
+using FoodstoreApi.Core.Entities;
 using FoodstoreApi.Usecase.Interfaces;
 using FoodstoreApi.Usecase.DTOs.Report;
 using FoodstoreApi.Infrastructure.Data;
@@ -320,6 +321,78 @@ public class ReportRepository(StoreDbContext context) : IReportRepository
                     OrderId = o.Id
                 }))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<FinancialReportDto> GetFinancialReportAsync(FinancialReportRequest request, CancellationToken cancellationToken = default)
+    {
+        var organization = await _context.Organizations.IgnoreQueryFilters().AsNoTracking()
+            .SingleOrDefaultAsync(o => o.Id == request.OrganizationId, cancellationToken)
+            ?? throw new InvalidOperationException("Organization was not found.");
+        if (request.BranchId.HasValue && !await _context.Branches.IgnoreQueryFilters().AnyAsync(
+                b => b.Id == request.BranchId.Value && b.OrganizationId == request.OrganizationId, cancellationToken))
+            throw new InvalidOperationException("Branch does not belong to the organization.");
+
+        var zone = ResolveTimeZone(organization.TimeZone);
+        var from = TimeZoneInfo.ConvertTimeToUtc(request.FromDate.ToDateTime(TimeOnly.MinValue), zone);
+        var to = TimeZoneInfo.ConvertTimeToUtc(request.ToDate.AddDays(1).ToDateTime(TimeOnly.MinValue), zone);
+        var branches = await _context.Branches.IgnoreQueryFilters().AsNoTracking()
+            .Where(b => b.OrganizationId == request.OrganizationId && (!request.BranchId.HasValue || b.Id == request.BranchId.Value))
+            .OrderBy(b => b.Name).Select(b => new { b.Id, b.Name }).ToListAsync(cancellationToken);
+        var branchIds = branches.Select(b => b.Id).ToList();
+
+        var orders = await _context.Orders.IgnoreQueryFilters().AsNoTracking()
+            .Where(o => o.BranchId.HasValue && branchIds.Contains(o.BranchId.Value) && o.CreatedAt >= from && o.CreatedAt < to)
+            .GroupBy(o => o.BranchId!.Value).Select(g => new { BranchId = g.Key, Count = g.Count() }).ToListAsync(cancellationToken);
+        var payments = await _context.PaymentIntents.IgnoreQueryFilters().AsNoTracking()
+            .Where(p => p.BranchId.HasValue && branchIds.Contains(p.BranchId.Value) && p.UpdatedAt >= from && p.UpdatedAt < to)
+            .GroupBy(p => new { p.BranchId, p.Status }).Select(g => new { g.Key.BranchId, g.Key.Status, Count = g.Count(), Amount = g.Sum(x => x.Amount) }).ToListAsync(cancellationToken);
+        var journals = await _context.LedgerJournals.IgnoreQueryFilters().AsNoTracking().Include(j => j.Lines).ThenInclude(l => l.Account)
+            .Where(j => j.OrganizationId == request.OrganizationId && j.PostedAt >= from && j.PostedAt < to && (!request.BranchId.HasValue || j.BranchId == request.BranchId))
+            .ToListAsync(cancellationToken);
+        var walletLines = await _context.LedgerJournalLines.IgnoreQueryFilters().AsNoTracking()
+            .Where(l => l.Account.OrganizationId == request.OrganizationId && l.Account.Code == "RESTAURANT_WALLET" && l.Account.Currency == organization.CurrencyCode)
+            .Select(l => l.Credit - l.Debit).ToListAsync(cancellationToken);
+        var settlements = await _context.SettlementBatches.IgnoreQueryFilters().AsNoTracking()
+            .Where(b => b.OrganizationId == request.OrganizationId && b.PeriodDate >= request.FromDate && b.PeriodDate <= request.ToDate)
+            .ToListAsync(cancellationToken);
+
+        var summaries = branches.Select(branch =>
+        {
+            var orderCount = orders.Where(x => x.BranchId == branch.Id).Sum(x => x.Count);
+            var succeeded = payments.Where(x => x.BranchId == branch.Id && x.Status == "succeeded").ToList();
+            var refunded = payments.Where(x => x.BranchId == branch.Id && x.Status == "refunded").ToList();
+            var gross = succeeded.Sum(x => x.Amount);
+            var refunds = refunded.Sum(x => x.Amount);
+            var branchWallet = journals.Where(j => j.BranchId == branch.Id).SelectMany(j => j.Lines)
+                .Where(l => l.Account.Code == "RESTAURANT_WALLET").Sum(l => l.Credit - l.Debit);
+            return new BranchFinancialSummary(branch.Id, branch.Name, orderCount, succeeded.Sum(x => x.Count),
+                orderCount == 0 ? 0 : Math.Round(succeeded.Sum(x => x.Count) * 100m / orderCount, 2), gross, refunds, gross - refunds, branchWallet);
+        }).ToList();
+        var commissions = journals.SelectMany(j => j.Lines).Where(l => l.Account.Code == "PLATFORM_COMMISSION").Sum(l => l.Credit);
+        var providerFees = journals.SelectMany(j => j.Lines).Where(l => l.Account.Code == "PROVIDER_FEES").Sum(l => l.Debit);
+        var failedPayments = payments.Where(x => x.Status == "failed").Sum(x => x.Count);
+        var refundsAwaiting = payments.Where(x => x.Status == "refund_pending").Sum(x => x.Count);
+        var reconciliationCount = await _context.ReconciliationCases.IgnoreQueryFilters().AsNoTracking()
+            .CountAsync(c => c.OrganizationId == request.OrganizationId && c.Status != "resolved", cancellationToken);
+        var walletPosition = walletLines.Sum();
+        var totals = new FinancialReportTotals(summaries.Sum(s => s.Orders), summaries.Sum(s => s.SuccessfulPayments),
+            summaries.Sum(s => s.Orders) == 0 ? 0 : Math.Round(summaries.Sum(s => s.SuccessfulPayments) * 100m / summaries.Sum(s => s.Orders), 2),
+            summaries.Sum(s => s.GrossSales), summaries.Sum(s => s.Refunds), commissions, providerFees,
+            summaries.Sum(s => s.NetSales) - commissions - providerFees, walletPosition,
+            settlements.Where(s => s.Status is not "paid" and not "reconciled").Sum(s => s.NetAmount), settlements.Count);
+        var exceptions = new FinancialExceptionSummary(failedPayments, refundsAwaiting, walletPosition < 0 || settlements.Any(s => s.Holds > 0) ? 1 : 0,
+            settlements.Count(s => s.Status == "failed"), reconciliationCount);
+
+        _context.ReportAccessLogs.Add(new ReportAccessLog { Id = Guid.NewGuid(), OrganizationId = request.OrganizationId, BranchId = request.BranchId,
+            ActorId = request.ActorId, ReportType = "financial", FromDate = request.FromDate, ToDate = request.ToDate, IsExport = request.IsExport });
+        await _context.SaveChangesAsync(cancellationToken);
+        return new FinancialReportDto(request.OrganizationId, organization.CurrencyCode, organization.TimeZone, request.FromDate, request.ToDate, totals, summaries, exceptions);
+    }
+
+    private static TimeZoneInfo ResolveTimeZone(string timeZone)
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById(timeZone); }
+        catch (TimeZoneNotFoundException) { return TimeZoneInfo.FindSystemTimeZoneById("E. Africa Standard Time"); }
     }
 }
 

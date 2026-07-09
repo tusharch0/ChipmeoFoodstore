@@ -198,4 +198,13 @@ public class ReportService : IReportService
             return recommendations;
         }, TimeSpan.FromMinutes(10), cancellationToken);
     }
+
+    public Task<FinancialReportDto> GetFinancialReportAsync(FinancialReportRequest request, CancellationToken cancellationToken = default)
+    {
+        if (request.ToDate < request.FromDate)
+            throw new InvalidOperationException("The report end date must not be earlier than the start date.");
+        if (request.ToDate.DayNumber - request.FromDate.DayNumber > 366)
+            throw new InvalidOperationException("Financial reports support a maximum period of 366 days.");
+        return _repository.GetFinancialReportAsync(request, cancellationToken);
+    }
 }

@@ -30,6 +30,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBlogSettingService, BlogSettingService>();
         services.AddScoped<IEInvoiceService, EInvoiceService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
+        services.AddScoped<ITenantAccessService, TenantAccessService>();
         services.AddScoped<IEInvoiceProviderFactory, EInvoiceProviderFactory>();
         services.AddTransient<IEInvoiceProvider, MisaProvider>();
         services.AddTransient<IEInvoiceProvider, ViettelProvider>();
@@ -37,6 +38,10 @@ public static class ServiceCollectionExtensions
         // Payments (IntaSend)
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<IPaymentProviderFactory, PaymentProviderFactory>();
+        services.AddScoped<ILedgerService, LedgerService>();
+        services.AddScoped<IFinanceService, FinanceService>();
+        services.AddScoped<ISettlementService, SettlementService>();
+        services.AddScoped<IFinanceOperationsService, FinanceOperationsService>();
         services.AddHttpClient<IntaSendProvider>();
         services.AddTransient<IPaymentProvider>(sp => sp.GetRequiredService<IntaSendProvider>());
 

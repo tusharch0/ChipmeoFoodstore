@@ -799,3 +799,17 @@ export interface PaymentEvent {
 }
 
 export interface PaymentIntentDetail extends PaymentIntent { events: PaymentEvent[] }
+
+export interface OrganizationBranch { id: string; name: string; code: string; address?: string; city?: string; phone?: string; isActive: boolean; openingHoursJson?: string; taxSettingsJson?: string; kitchenRouting?: string }
+export interface Organization { id: string; name: string; currencyCode: string; branches: OrganizationBranch[] }
+export interface FinancialReportTotals { orders: number; successfulPayments: number; paymentConversionRate: number; grossSales: number; refunds: number; commissions: number; providerFees: number; netSales: number; walletPosition: number; pendingSettlement: number; settlementCount: number }
+export interface BranchFinancialSummary { branchId: string; branchName: string; orders: number; successfulPayments: number; paymentConversionRate: number; grossSales: number; refunds: number; netSales: number; walletPosition: number }
+export interface FinancialExceptionSummary { failedPayments: number; refundsAwaitingAction: number; negativeOrHeldWallets: number; settlementFailures: number; reconciliationDiscrepancies: number }
+export interface FinancialReport { organizationId: string; currency: string; timeZone: string; fromDate: string; toDate: string; totals: FinancialReportTotals; branches: BranchFinancialSummary[]; exceptions: FinancialExceptionSummary }
+export interface WalletBalance { organizationId: string; currency: string; available: number; pending: number; held: number; total: number }
+export interface LedgerJournal { id: string; entryType: string; sourceType: string; sourceId: string; description: string; currency: string; postedAt: string; debits: number; credits: number }
+export interface LedgerAccount { id: string; organizationId?: string; code: string; name: string; accountType: string; currency: string }
+export interface SettlementLine { id: string; paymentIntentId: string; grossAmount: number; commissionAmount: number; providerFeeAmount: number; netAmount: number }
+export interface SettlementBatch { id: string; organizationId: string; currency: string; periodDate: string; status: string; grossSales: number; refunds: number; providerFees: number; commissions: number; adjustments: number; holds: number; netAmount: number; payoutReference?: string; failureReason?: string; createdAt: string; lines?: SettlementLine[] }
+export interface FinanceAdjustment { id: string; organizationId: string; ledgerAccountId: string; amount: number; currency: string; reasonCode: string; reason: string; status: string; createdAt: string }
+export interface ReconciliationCase { id: string; organizationId: string; sourceType: string; sourceReference: string; internalAmount: number; externalAmount: number; currency: string; status: string; evidenceUrl?: string; resolution?: string; createdAt: string }
