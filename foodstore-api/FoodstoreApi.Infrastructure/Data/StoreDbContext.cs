@@ -13,6 +13,9 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
     public StoreDbContext(DbContextOptions<StoreDbContext> options) : base(options) { }
 
     public virtual DbSet<Employee> Employees => Set<Employee>();
+    public virtual DbSet<Organization> Organizations => Set<Organization>();
+    public virtual DbSet<Branch> Branches => Set<Branch>();
+    public virtual DbSet<OrganizationMembership> OrganizationMemberships => Set<OrganizationMembership>();
     public virtual DbSet<Customer> Customers => Set<Customer>();
     public virtual DbSet<Category> Categories => Set<Category>();
     public virtual DbSet<MenuItem> MenuItems => Set<MenuItem>();
@@ -56,6 +59,54 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.Property(e => e.EmailConfirmed).HasColumnName("email_verified");
         });
 
+        modelBuilder.Entity<Organization>(entity =>
+        {
+            entity.ToTable("organizations");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasMaxLength(150).HasColumnName("name");
+            entity.Property(e => e.Slug).HasMaxLength(100).HasColumnName("slug");
+            entity.Property(e => e.LegalName).HasMaxLength(200).HasColumnName("legal_name");
+            entity.Property(e => e.TaxId).HasMaxLength(100).HasColumnName("tax_id");
+            entity.Property(e => e.CurrencyCode).HasMaxLength(3).HasColumnName("currency_code").HasDefaultValue("KES");
+            entity.Property(e => e.TimeZone).HasMaxLength(100).HasColumnName("time_zone").HasDefaultValue("Africa/Nairobi");
+            entity.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+            entity.ConfigureAudit();
+            entity.HasIndex(e => e.Slug).IsUnique();
+        });
+
+        modelBuilder.Entity<Branch>(entity =>
+        {
+            entity.ToTable("branches");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.Name).HasMaxLength(150).HasColumnName("name");
+            entity.Property(e => e.Code).HasMaxLength(50).HasColumnName("code");
+            entity.Property(e => e.Address).HasMaxLength(500).HasColumnName("address");
+            entity.Property(e => e.City).HasMaxLength(100).HasColumnName("city");
+            entity.Property(e => e.Phone).HasMaxLength(30).HasColumnName("phone");
+            entity.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+            entity.ConfigureAudit();
+            entity.HasIndex(e => new { e.OrganizationId, e.Code }).IsUnique();
+            entity.HasOne(e => e.Organization).WithMany(e => e.Branches).HasForeignKey(e => e.OrganizationId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<OrganizationMembership>(entity =>
+        {
+            entity.ToTable("organization_memberships");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.Role).HasMaxLength(50).HasColumnName("role");
+            entity.Property(e => e.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+            entity.ConfigureAudit();
+            entity.HasIndex(e => new { e.OrganizationId, e.UserId }).IsUnique();
+            entity.HasOne(e => e.Organization).WithMany(e => e.Memberships).HasForeignKey(e => e.OrganizationId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User).WithMany(e => e.OrganizationMemberships).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<ApplicationRole>(entity =>
         {
             entity.ToTable("AspNetRoles");
@@ -95,6 +146,7 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.EmployeeCode).HasMaxLength(50).HasColumnName("employee_code");
             entity.Property(e => e.RoleId).HasColumnName("role_id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Phone).HasMaxLength(20).HasColumnName("phone");
             entity.Property(e => e.AvatarUrl).HasMaxLength(500).HasColumnName("avatar_url");
             entity.Property(e => e.HireDate).HasColumnName("hire_date");
@@ -114,6 +166,11 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
                 .WithMany(r => r.Employees)
                 .HasForeignKey(e => e.RoleId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.Branch)
+                .WithMany(e => e.Employees)
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Customers
@@ -276,8 +333,11 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Name).HasMaxLength(50).HasColumnName("name").UseCollation("vi_ci_ai");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.ConfigureAudit();
+            entity.HasIndex(e => e.BranchId);
+            entity.HasOne(e => e.Branch).WithMany(e => e.Sources).HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.SetNull);
         });
 
         // Orders
@@ -288,6 +348,7 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.OrderCode).HasMaxLength(20).HasColumnName("order_code");
             entity.Property(e => e.SourceId).HasColumnName("source_id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.EmployeeId).HasColumnName("employee_id");
             entity.Property(e => e.CustomerId).HasColumnName("customer_id");
             entity.Property(e => e.DiscountId).HasColumnName("discount_id");
@@ -303,6 +364,12 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.ConfigureAudit();
 
             entity.HasIndex(e => e.OrderCode).IsUnique();
+            entity.HasIndex(e => e.BranchId);
+
+            entity.HasOne(e => e.Branch)
+                .WithMany(e => e.Orders)
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(e => e.Source)
                 .WithMany(s => s.Orders)

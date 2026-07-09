@@ -5,6 +5,7 @@ public partial class Order : IAuditableEntity
     public Guid Id { get; set; }
     public string OrderCode { get; set; } = null!;
     public Guid? SourceId { get; set; }
+    public Guid? BranchId { get; set; }
     public Guid? EmployeeId { get; set; }
     public Guid? CustomerId { get; set; }
     public Guid? DiscountId { get; set; }
@@ -26,6 +27,7 @@ public partial class Order : IAuditableEntity
     public virtual Customer? Customer { get; set; }
     public virtual Employee? Employee { get; set; }
     public virtual Source? Source { get; set; }
+    public virtual Branch? Branch { get; set; }
     public virtual Employee? UpdatedByNavigation { get; set; }
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
     public virtual ICollection<OrderStatusHistory> OrderStatusHistories { get; set; } = new List<OrderStatusHistory>();

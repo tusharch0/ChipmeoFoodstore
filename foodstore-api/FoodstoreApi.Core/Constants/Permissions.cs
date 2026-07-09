@@ -4,6 +4,10 @@ public static class Permissions
 {
     public static readonly List<PermissionInfo> All = new()
     {
+        // Organization and branch management
+        new("organization.view", "View organizations", "Can view restaurant organizations and branches", "organization"),
+        new("organization.manage", "Manage organizations", "Can create and manage restaurant organizations and branches", "organization"),
+
         // Category
         new("category.view",   "Xem danh mục",   "Có thể xem danh sách danh mục",  "category"),
         new("category.create", "Tạo danh mục",   "Có thể tạo danh mục mới",        "category"),

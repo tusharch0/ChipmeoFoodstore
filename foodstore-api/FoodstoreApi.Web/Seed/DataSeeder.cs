@@ -52,6 +52,14 @@ public static class DataSeeder
         }
 
         // 3. Seed customer role (nếu chưa có)
+        // Keep the root role synchronized when platform capabilities introduce permissions.
+        var existingRootPermissions = (await roleManager.GetClaimsAsync(rootRole))
+            .Where(e => e.Type.Equals("Permission", StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.Value)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var permission in Permissions.All.Where(e => !existingRootPermissions.Contains(e.Code)))
+            await roleManager.AddClaimAsync(rootRole, new Claim("Permission", permission.Code));
+
         var customerRole = await roleManager.FindByNameAsync("customer");
         if (customerRole == null)
         {

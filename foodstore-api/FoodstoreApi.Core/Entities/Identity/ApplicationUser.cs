@@ -13,4 +13,5 @@ public class ApplicationUser : IdentityUser<Guid>, IAuditableEntity
 
     public virtual Employee? Employee { get; set; }
     public virtual Customer? Customer { get; set; }
+    public virtual ICollection<OrganizationMembership> OrganizationMemberships { get; set; } = new List<OrganizationMembership>();
 }

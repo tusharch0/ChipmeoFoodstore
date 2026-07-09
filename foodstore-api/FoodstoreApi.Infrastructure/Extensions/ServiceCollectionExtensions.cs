@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBlogRevisionRepository, BlogRevisionRepository>();
         services.AddScoped<IBlogBlockRepository, BlogBlockRepository>();
         services.AddScoped<IBlogSettingRepository, BlogSettingRepository>();
+        services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 
         services.AddScoped<IEInvoiceRepository, EInvoiceRepository>();
 
