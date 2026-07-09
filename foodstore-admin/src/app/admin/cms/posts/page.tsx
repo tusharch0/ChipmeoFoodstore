@@ -18,10 +18,10 @@ import { formatDateTime } from "@/lib/utils"
 import type { BlogPost } from "@/lib/types"
 
 const statusLabels: Record<string, string> = {
-  draft: "Bản nháp",
-  reviewed: "Đã duyệt",
-  published: "Đã xuất bản",
-  scheduled: "Đã lên lịch",
+  draft: "Draft",
+  reviewed: "Reviewed",
+  published: "Published",
+  scheduled: "Scheduled",
 }
 
 export default function PostsPage() {
@@ -37,7 +37,7 @@ export default function PostsPage() {
   const loadData = React.useCallback(async () => {
     setLoading(true)
     try { const res = await blogService.getAll(); setData(res) }
-    catch { toast.error("Không thể tải bài viết") }
+    catch { toast.error("Failed to load posts") }
     finally { setLoading(false) }
   }, [])
 
@@ -50,15 +50,15 @@ export default function PostsPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await blogService.delete(deleteTarget.id); toast.success("Xóa bài viết thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa bài viết") }
+    try { await blogService.delete(deleteTarget.id); toast.success("Post deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete post") }
     finally { setDeleting(false) }
   }
 
   const columns: ColumnDef<BlogPost>[] = [
     {
       accessorKey: "title",
-      header: "Tiêu đề",
+      header: "Title",
       cell: ({ row }) => (
         <div className="flex items-center gap-2 max-w-[300px]">
           <span className="truncate font-medium">{row.original.title}</span>
@@ -67,27 +67,27 @@ export default function PostsPage() {
     },
     {
       accessorKey: "status",
-      header: "Trạng thái",
+      header: "Status",
       cell: ({ row }) => <StatusBadge status={row.original.status ?? "draft"} customLabels={statusLabels} />,
     },
     {
       accessorKey: "authorName",
-      header: "Tác giả",
+      header: "Author",
     },
     {
       accessorKey: "viewCount",
-      header: "Lượt xem",
+      header: "Views",
     },
     {
       accessorKey: "createdAt",
-      header: "Ngày tạo",
+      header: "Created",
       cell: ({ row }) => formatDateTime(row.original.createdAt),
     },
     {
       id: "actions",
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => openEdit(row.original)} title="Mở trình soạn thảo">
+          <Button variant="ghost" size="icon" onClick={() => openEdit(row.original)} title="Open editor">
             <FileEdit className="size-4" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => confirmDelete(row.original)}>
@@ -104,13 +104,13 @@ export default function PostsPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Bài viết</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Posts</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Quản lý bài viết</h1>
-          <Button onClick={openCreate} className="gap-1.5"><Plus className="size-4" />Thêm bài viết</Button>
+          <h1 className="text-lg font-semibold">Manage Posts</h1>
+          <Button onClick={openCreate} className="gap-1.5"><Plus className="size-4" />Add Post</Button>
         </div>
         <DataTable columns={columns} data={data} loading={loading} />
 

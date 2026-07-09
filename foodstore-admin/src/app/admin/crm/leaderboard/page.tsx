@@ -32,7 +32,7 @@ export default function LeaderboardPage() {
       try {
         const res = await customerService.getAll()
         setData(res.sort((a, b) => b.loyaltyPoints - a.loyaltyPoints))
-      } catch { toast.error("Không thể tải bảng xếp hạng") }
+      } catch { toast.error("Failed to load leaderboard") }
       finally { setLoading(false) }
     })()
   }, [])
@@ -51,7 +51,7 @@ export default function LeaderboardPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Bảng xếp hạng điểm</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Loyalty Points Leaderboard</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -68,7 +68,7 @@ export default function LeaderboardPage() {
                   <p className="text-xs text-muted-foreground">{c.customerCode}</p>
                 </div>
                 <p className="text-2xl font-bold">{c.loyaltyPoints.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">điểm</p>
+                <p className="text-sm text-muted-foreground">points</p>
                 {c.membershipLevel && (
                   <Badge variant="outline" className={levelBadge[c.membershipLevel.toLowerCase()] ?? ""}>{c.membershipLevel}</Badge>
                 )}
@@ -78,7 +78,7 @@ export default function LeaderboardPage() {
         </div>
 
         <div className="rounded-lg border">
-          <div className="p-4 text-sm font-medium text-muted-foreground">Tất cả khách hàng</div>
+          <div className="p-4 text-sm font-medium text-muted-foreground">All Customers</div>
           <div className="divide-y">
             {data.map((c, i) => (
               <div key={c.id} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50">
@@ -93,14 +93,14 @@ export default function LeaderboardPage() {
                 )}
                 <div className="text-right">
                   <p className="font-bold">{c.loyaltyPoints.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">điểm</p>
+                  <p className="text-xs text-muted-foreground">points</p>
                 </div>
               </div>
             ))}
             {data.length === 0 && (
               <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
                 <Star className="size-8" />
-                <span>Chưa có khách hàng nào</span>
+                <span>No customers yet</span>
               </div>
             )}
           </div>

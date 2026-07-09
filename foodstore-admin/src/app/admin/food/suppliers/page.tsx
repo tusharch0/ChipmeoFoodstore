@@ -35,7 +35,7 @@ export default function SuppliersPage() {
   const loadData = React.useCallback(async () => {
     setLoading(true)
     try { const res = await sourceService.getAll(); setData(res) }
-    catch { toast.error("Không thể tải nguồn đơn") }
+    catch { toast.error("Failed to load sources") }
     finally { setLoading(false) }
   }, [])
 
@@ -46,15 +46,15 @@ export default function SuppliersPage() {
   const openEdit = (item: Source) => { setEditing(item); setFormName(item.name); setFormIsActive(item.isActive); setSheetOpen(true) }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) { toast.error("Vui lòng nhập tên nguồn"); return }
+    if (!formName.trim()) { toast.error("Please enter a source name"); return }
     setSubmitting(true)
     try {
       if (editing) {
         await sourceService.update(editing.id, { name: formName.trim(), isActive: formIsActive } as SourceUpdateDto)
-        toast.success("Cập nhật nguồn đơn thành công")
+        toast.success("Source updated successfully")
       } else {
         await sourceService.create({ name: formName.trim(), isActive: formIsActive } as SourceCreateDto)
-        toast.success("Thêm nguồn đơn thành công")
+        toast.success("Source added successfully")
       }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
@@ -65,14 +65,14 @@ export default function SuppliersPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await sourceService.delete(deleteTarget.id); toast.success("Xóa nguồn đơn thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa nguồn đơn") }
+    try { await sourceService.delete(deleteTarget.id); toast.success("Source deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete source") }
     finally { setDeleting(false) }
   }
 
   const columns: ColumnDef<Source>[] = [
-    { id: "name", accessorKey: "name", header: "Tên nguồn" },
-    { id: "isActive", header: "Trạng thái", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
+    { id: "name", accessorKey: "name", header: "Source Name" },
+    { id: "isActive", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
     { id: "actions", header: "", cell: ({ row }) => (
       <div className="flex justify-end gap-1">
         <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)}><Edit className="size-4" /></Button>
@@ -87,22 +87,22 @@ export default function SuppliersPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Nguồn đơn</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Order Sources</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Tìm nguồn..." loading={loading}
-          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Thêm nguồn</Button>} />
+        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search sources..." loading={loading}
+          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Add Source</Button>} />
       </div>
-      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Sửa nguồn đơn" : "Thêm nguồn đơn"} onSubmit={handleSubmit} submitting={submitting}>
+      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Edit Source" : "Add Source"} onSubmit={handleSubmit} submitting={submitting}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Tên nguồn</Label>
-            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="VD: Gọi món tại bàn, Grab..." />
+            <Label htmlFor="name">Source Name</Label>
+            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Dine-in, Grab..." />
           </div>
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={formIsActive} onCheckedChange={setFormIsActive} />
-            <Label htmlFor="isActive">Hoạt động</Label>
+            <Label htmlFor="isActive">Active</Label>
           </div>
         </div>
       </CrudSheet>

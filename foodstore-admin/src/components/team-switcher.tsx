@@ -58,7 +58,7 @@ export function TeamSwitcher({
           >
             <DropdownMenuGroup>
               <DropdownMenuLabel className="text-xs text-muted-foreground">
-                Phân hệ
+                Modules
               </DropdownMenuLabel>
               {teams.map((team, index) => (
                 <DropdownMenuItem

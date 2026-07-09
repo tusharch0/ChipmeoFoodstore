@@ -53,7 +53,7 @@ export default function CustomersPage() {
   const loadData = React.useCallback(async () => {
     setLoading(true)
     try { const res = await customerService.getAll(); setData(res) }
-    catch { toast.error("Không thể tải khách hàng") }
+    catch { toast.error("Failed to load customers") }
     finally { setLoading(false) }
   }, [])
 
@@ -66,15 +66,15 @@ export default function CustomersPage() {
   }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) { toast.error("Vui lòng nhập họ tên"); return }
+    if (!formName.trim()) { toast.error("Please enter a name"); return }
     setSubmitting(true)
     try {
       if (editing) {
         await customerService.update(editing.id, { name: formName.trim(), phone: formPhone || undefined, birthday: formBirthday || undefined } as UpdateCustomerAdminDto)
-        toast.success("Cập nhật khách hàng thành công")
+        toast.success("Customer updated successfully")
       } else {
         await customerService.create({ name: formName.trim(), phone: formPhone || undefined, username: formUsername || undefined, email: formEmail || undefined, password: formPassword || undefined, birthday: formBirthday || undefined } as CreateCustomerDto)
-        toast.success("Thêm khách hàng thành công")
+        toast.success("Customer added successfully")
       }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
@@ -85,18 +85,18 @@ export default function CustomersPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await customerService.delete(deleteTarget.id); toast.success("Xóa khách hàng thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa khách hàng") }
+    try { await customerService.delete(deleteTarget.id); toast.success("Customer deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete customer") }
     finally { setDeleting(false) }
   }
 
   const handleAddPoints = async () => {
-    if (!pointsTarget || pointsAmount <= 0) { toast.error("Nhập số điểm hợp lệ"); return }
-    if (!pointsReason.trim()) { toast.error("Nhập lý do"); return }
+    if (!pointsTarget || pointsAmount <= 0) { toast.error("Enter a valid points amount"); return }
+    if (!pointsReason.trim()) { toast.error("Enter a reason"); return }
     setPointsSubmitting(true)
     try {
       await customerService.addPoints(pointsTarget.id, { points: pointsAmount, reason: pointsReason.trim() })
-      toast.success(`Đã cộng ${pointsAmount} điểm cho ${pointsTarget.name}`)
+      toast.success(`Added ${pointsAmount} points to ${pointsTarget.name}`)
       setPointsOpen(false); setPointsAmount(0); setPointsReason(""); loadData()
     } catch (e) { toast.error((e as Error).message) }
     finally { setPointsSubmitting(false) }
@@ -109,7 +109,7 @@ export default function CustomersPage() {
     try {
       const orders = await customerService.getOrderHistory(customer.id)
       setOrderHistoryData(orders)
-    } catch { toast.error("Không thể tải lịch sử đơn hàng") }
+    } catch { toast.error("Failed to load order history") }
     finally { setOrderHistoryLoading(false) }
   }
 
@@ -127,7 +127,7 @@ export default function CustomersPage() {
     {
       id: "name",
       accessorKey: "name",
-      header: "Họ tên",
+      header: "Name",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           {row.original.avatarUrl ? <img src={row.original.avatarUrl} alt="" className="size-8 rounded-full object-cover" /> : <div className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium">{row.original.name.charAt(0)}</div>}
@@ -136,19 +136,19 @@ export default function CustomersPage() {
       ),
     },
     { id: "email", accessorKey: "email", header: "Email" },
-    { id: "phone", accessorKey: "phone", header: "SĐT", cell: ({ row }) => row.original.phone || "—" },
-    { id: "customerCode", accessorKey: "customerCode", header: "Mã KH" },
-    { id: "loyaltyPoints", accessorKey: "loyaltyPoints", header: "Điểm" },
-    { id: "membershipLevel", header: "Hạng", cell: ({ row }) => row.original.membershipLevel ? <StatusBadge status={row.original.membershipLevel} /> : "—" },
-    { id: "birthday", header: "Ngày sinh", cell: ({ row }) => row.original.birthday ? formatDate(row.original.birthday) : "—" },
-    { id: "createdAt", header: "Ngày tạo", cell: ({ row }) => formatDateTime(row.original.createdAt) },
+    { id: "phone", accessorKey: "phone", header: "Phone", cell: ({ row }) => row.original.phone || "—" },
+    { id: "customerCode", accessorKey: "customerCode", header: "Code" },
+    { id: "loyaltyPoints", accessorKey: "loyaltyPoints", header: "Points" },
+    { id: "membershipLevel", header: "Tier", cell: ({ row }) => row.original.membershipLevel ? <StatusBadge status={row.original.membershipLevel} /> : "—" },
+    { id: "birthday", header: "Birthday", cell: ({ row }) => row.original.birthday ? formatDate(row.original.birthday) : "—" },
+    { id: "createdAt", header: "Created", cell: ({ row }) => formatDateTime(row.original.createdAt) },
     {
       id: "actions",
       header: "",
       cell: ({ row }) => (
         <div className="flex justify-end gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={() => openOrderHistory(row.original)} title="Lịch sử đơn hàng"><History className="size-4" /></Button>
-          <Button variant="ghost" size="icon-sm" onClick={() => { setPointsTarget(row.original); setPointsOpen(true) }} title="Cộng điểm"><Coins className="size-4 text-green-600" /></Button>
+          <Button variant="ghost" size="icon-sm" onClick={() => openOrderHistory(row.original)} title="Order history"><History className="size-4" /></Button>
+          <Button variant="ghost" size="icon-sm" onClick={() => { setPointsTarget(row.original); setPointsOpen(true) }} title="Add points"><Coins className="size-4 text-green-600" /></Button>
           <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)}><Edit className="size-4" /></Button>
           <Button variant="ghost" size="icon-sm" onClick={() => confirmDelete(row.original)}><Trash2 className="size-4 text-destructive" /></Button>
         </div>
@@ -162,40 +162,40 @@ export default function CustomersPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Khách hàng</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Customers</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Tìm khách hàng..." loading={loading}
-          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Thêm khách hàng</Button>} />
+        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search customers..." loading={loading}
+          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Add Customer</Button>} />
       </div>
-      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Sửa khách hàng" : "Thêm khách hàng"} onSubmit={handleSubmit} submitting={submitting}>
+      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Edit Customer" : "Add Customer"} onSubmit={handleSubmit} submitting={submitting}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Họ tên</Label>
-            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Nguyễn Văn A" />
+            <Label htmlFor="name">Full Name</Label>
+            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="John Doe" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="a@example.com" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">Số điện thoại</Label>
+            <Label htmlFor="phone">Phone Number</Label>
             <Input id="phone" value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="0123456789" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="birthday">Ngày sinh</Label>
+            <Label htmlFor="birthday">Birthday</Label>
             <Input id="birthday" type="date" value={formBirthday} onChange={(e) => setFormBirthday(e.target.value)} />
           </div>
           {!editing && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="username">Tên đăng nhập</Label>
-                <Input id="username" value={formUsername} onChange={(e) => setFormUsername(e.target.value)} placeholder="Để trống = tự động" />
+                <Label htmlFor="username">Username</Label>
+                <Input id="username" value={formUsername} onChange={(e) => setFormUsername(e.target.value)} placeholder="Leave blank = auto-generate" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Mật khẩu</Label>
-                <Input id="password" type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="Để trống = 123456" />
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="Leave blank = 123456" />
               </div>
             </>
           )}
@@ -205,39 +205,39 @@ export default function CustomersPage() {
       <Dialog open={!!qrTarget} onOpenChange={(open) => { if (!open) setQrTarget(null) }}>
         <DialogContent className="w-fit sm:max-w-sm" showCloseButton={true}>
           <DialogHeader>
-            <DialogTitle>Mã QR - {qrTarget?.name}</DialogTitle>
+            <DialogTitle>QR Code - {qrTarget?.name}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-3 py-4">
             {qrTarget && <QRCodeSVG value={qrTarget.customerCode} size={200} />}
-            <p className="text-sm text-muted-foreground">Mã KH: {qrTarget?.customerCode}</p>
+            <p className="text-sm text-muted-foreground">Code: {qrTarget?.customerCode}</p>
           </div>
         </DialogContent>
       </Dialog>
       <Dialog open={pointsOpen} onOpenChange={(open) => { if (!open) { setPointsOpen(false); setPointsAmount(0); setPointsReason("") } }}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>Cộng điểm - {pointsTarget?.name}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Add Points - {pointsTarget?.name}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Số điểm</Label>
-              <Input type="number" min="1" value={pointsAmount || ""} onChange={(e) => setPointsAmount(Number(e.target.value))} placeholder="Nhập số điểm" />
+              <Label>Points</Label>
+              <Input type="number" min="1" value={pointsAmount || ""} onChange={(e) => setPointsAmount(Number(e.target.value))} placeholder="Enter points amount" />
             </div>
             <div className="space-y-2">
-              <Label>Lý do</Label>
-              <Input value={pointsReason} onChange={(e) => setPointsReason(e.target.value)} placeholder="VD: Thưởng sinh nhật, tích lũy..." />
+              <Label>Reason</Label>
+              <Input value={pointsReason} onChange={(e) => setPointsReason(e.target.value)} placeholder="e.g. Birthday reward, loyalty bonus..." />
             </div>
-            <Button className="w-full" onClick={handleAddPoints} disabled={pointsSubmitting}>{pointsSubmitting ? "Đang xử lý..." : "Thêm điểm"}</Button>
+            <Button className="w-full" onClick={handleAddPoints} disabled={pointsSubmitting}>{pointsSubmitting ? "Processing..." : "Add Points"}</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Sheet open={orderHistoryOpen} onOpenChange={(open) => { if (!open) { setOrderHistoryOpen(false); setOrderHistoryData([]) } }}>
         <SheetContent className="sm:max-w-xl">
-          <SheetHeader><SheetTitle>Lịch sử đơn hàng - {orderHistoryTarget?.name}</SheetTitle></SheetHeader>
+          <SheetHeader><SheetTitle>Order History - {orderHistoryTarget?.name}</SheetTitle></SheetHeader>
           <div className="mt-4 space-y-2">
             {orderHistoryLoading ? (
-              <p className="text-sm text-muted-foreground">Đang tải...</p>
+              <p className="text-sm text-muted-foreground">Loading...</p>
             ) : orderHistoryData.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Chưa có đơn hàng nào</p>
+              <p className="text-sm text-muted-foreground">No orders yet</p>
             ) : (
               orderHistoryData.map((order) => (
                 <div key={order.id} className="flex items-center justify-between rounded-lg border p-3">

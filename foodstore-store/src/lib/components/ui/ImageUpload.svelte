@@ -9,7 +9,7 @@
 		class?: string;
 	}
 
-	let { preview = '', onSelect, onClear, label = 'Ảnh', class: className = '' }: Props = $props();
+	let { preview = '', onSelect, onClear, label = 'Image', class: className = '' }: Props = $props();
 
 	let input: HTMLInputElement | undefined = $state();
 
@@ -43,11 +43,11 @@
 			onclick={handleSelect}
 			class="rounded-base bg-brand-softer border border-brand-subtle px-3 py-1.5 text-sm text-fg-brand-strong hover:bg-brand-soft font-medium"
 		>
-			Chọn {label.toLowerCase()}
+			Select {label.toLowerCase()}
 		</button>
 		{#if preview && onClear}
 			<button type="button" onclick={onClear} class="text-sm text-fg-danger hover:underline">
-				Xóa {label.toLowerCase()}
+				Remove {label.toLowerCase()}
 			</button>
 		{/if}
 	</div>

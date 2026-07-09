@@ -24,7 +24,7 @@ export default function EmployeeDashboard() {
         setTotal(emps.length)
         setActive(emps.filter((e) => e.isActive).length)
         setRoleCount(roles.length)
-      } catch { toast.error("Không thể tải dữ liệu") }
+      } catch { toast.error("Failed to load data") }
       finally { setLoading(false) }
     }
     load()
@@ -36,7 +36,7 @@ export default function EmployeeDashboard() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Tổng quan nhân viên</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Employee Overview</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -50,7 +50,7 @@ export default function EmployeeDashboard() {
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Tổng nhân viên</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
                 <Users className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -59,7 +59,7 @@ export default function EmployeeDashboard() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Đang hoạt động</CardTitle>
+                <CardTitle className="text-sm font-medium">Active</CardTitle>
                 <BadgeCheck className="size-4 text-emerald-500" />
               </CardHeader>
               <CardContent>
@@ -68,7 +68,7 @@ export default function EmployeeDashboard() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Vai trò</CardTitle>
+                <CardTitle className="text-sm font-medium">Roles</CardTitle>
                 <UserCog className="size-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>

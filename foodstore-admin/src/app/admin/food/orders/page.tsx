@@ -30,8 +30,8 @@ const STATUS_FLOW: Record<string, string[]> = {
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: "Chờ xử lý", confirmed: "Đã xác nhận", preparing: "Đang nấu",
-  ready: "Sẵn sàng", served: "Đã phục vụ", paid: "Đã thanh toán", cancelled: "Đã hủy",
+  pending: "Pending", confirmed: "Confirmed", preparing: "Preparing",
+  ready: "Ready", served: "Served", paid: "Paid", cancelled: "Cancelled",
 }
 
 export default function OrdersPage() {
@@ -51,7 +51,7 @@ export default function OrdersPage() {
     try {
       const res = await orderService.getPaged(p ?? page, pageSize, fromDate || undefined, toDate || undefined)
       setData(res.items); setTotalCount(res.totalCount)
-    } catch { toast.error("Không thể tải đơn hàng") }
+    } catch { toast.error("Failed to load orders") }
     finally { setLoading(false) }
   }, [page, pageSize, fromDate, toDate])
 
@@ -67,39 +67,39 @@ export default function OrdersPage() {
     setStatusUpdating(orderId)
     try {
       await orderService.updateStatus(orderId, newStatus)
-      toast.success(`Đã chuyển sang: ${STATUS_LABELS[newStatus] ?? newStatus}`)
+      toast.success(`Status changed to: ${STATUS_LABELS[newStatus] ?? newStatus}`)
       loadData()
       if (selectedOrder?.id === orderId) { const updated = await orderService.getById(orderId); setSelectedOrder(updated) }
-    } catch { toast.error("Không thể cập nhật trạng thái") }
+    } catch { toast.error("Failed to update status") }
     finally { setStatusUpdating(null) }
   }
 
   const handleSetUnpaid = async (orderId: string) => {
     setStatusUpdating(orderId)
-    try { await orderService.setUnpaid(orderId); toast.success("Đã chuyển về chưa thanh toán"); loadData() }
-    catch { toast.error("Không thể chuyển trạng thái") }
+    try { await orderService.setUnpaid(orderId); toast.success("Marked as unpaid"); loadData() }
+    catch { toast.error("Failed to change status") }
     finally { setStatusUpdating(null) }
   }
 
   const viewDetail = async (order: Order) => {
     try { const detail = await orderService.getById(order.id); setSelectedOrder(detail); setDetailOpen(true) }
-    catch { toast.error("Không thể tải chi tiết đơn hàng") }
+    catch { toast.error("Failed to load order details") }
   }
 
   const columns: ColumnDef<Order>[] = [
-    { id: "orderCode", accessorKey: "orderCode", header: "Mã ĐH" },
-    { id: "customerName", header: "Khách hàng", cell: ({ row }) => row.original.customerName ?? row.original.customerPhone ?? "—" },
-    { id: "totalAmount", header: "Tổng tiền", cell: ({ row }) => formatCurrency(row.original.totalAmount) },
-    { id: "status", header: "Trạng thái", cell: ({ row }) => <StatusBadge status={row.original.status} customLabels={STATUS_LABELS} /> },
-    { id: "sourceName", header: "Nguồn", cell: ({ row }) => row.original.sourceName ?? "—" },
-    { id: "createdAt", header: "Ngày tạo", cell: ({ row }) => formatDateTime(row.original.createdAt) },
+    { id: "orderCode", accessorKey: "orderCode", header: "Order #" },
+    { id: "customerName", header: "Customer", cell: ({ row }) => row.original.customerName ?? row.original.customerPhone ?? "—" },
+    { id: "totalAmount", header: "Total", cell: ({ row }) => formatCurrency(row.original.totalAmount) },
+    { id: "status", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.status} customLabels={STATUS_LABELS} /> },
+    { id: "sourceName", header: "Source", cell: ({ row }) => row.original.sourceName ?? "—" },
+    { id: "createdAt", header: "Created", cell: ({ row }) => formatDateTime(row.original.createdAt) },
     { id: "actions", header: "", cell: ({ row }) => (
       <Button variant="ghost" size="icon-sm" onClick={() => viewDetail(row.original)}><Eye className="size-4" /></Button>
     )},
   ]
 
   const menuItemNames = selectedOrder?.items?.map((item) => {
-    const name = item.menuItemName ?? item.comboName ?? `Món #${item.menuItemId ?? item.comboId}`
+    const name = item.menuItemName ?? item.comboName ?? `Item #${item.menuItemId ?? item.comboId}`
     const addons = item.addons?.map((a) => `${a.addonName ?? "Topping"} x${a.quantity}`).join(", ")
     return { name, quantity: item.quantity, unitPrice: item.unitPrice, total: (item.totalPrice ?? item.unitPrice * item.quantity), addons }
   }) ?? []
@@ -110,34 +110,34 @@ export default function OrdersPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Đơn hàng</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Orders</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Label htmlFor="fromDate" className="text-sm">Từ</Label>
+            <Label htmlFor="fromDate" className="text-sm">From</Label>
             <Input id="fromDate" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-40" />
           </div>
           <div className="flex items-center gap-2">
-            <Label htmlFor="toDate" className="text-sm">Đến</Label>
+            <Label htmlFor="toDate" className="text-sm">To</Label>
             <Input id="toDate" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-40" />
           </div>
-          <Button variant="outline" size="sm" onClick={() => loadData()}>Lọc</Button>
+          <Button variant="outline" size="sm" onClick={() => loadData()}>Filter</Button>
           {(fromDate || toDate) && (
-            <Button variant="ghost" size="sm" onClick={() => { setFromDate(""); setToDate("") }}>Xóa bộ lọc</Button>
+            <Button variant="ghost" size="sm" onClick={() => { setFromDate(""); setToDate("") }}>Clear Filters</Button>
           )}
         </div>
-        <DataTable columns={columns} data={data} searchKey="orderCode" searchPlaceholder="Tìm đơn hàng..." loading={loading} />
+        <DataTable columns={columns} data={data} searchKey="orderCode" searchPlaceholder="Search orders..." loading={loading} />
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Tổng: {totalCount} đơn hàng</span>
+          <span>Total: {totalCount} orders</span>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => { setPage((p) => p - 1); loadData(page - 1) }}>
-              Trang trước
+              Previous Page
             </Button>
-            <span>Trang {page}</span>
+            <span>Page {page}</span>
             <Button variant="outline" size="sm" disabled={page * pageSize >= totalCount} onClick={() => { setPage((p) => p + 1); loadData(page + 1) }}>
-              Trang sau
+              Next Page
             </Button>
           </div>
         </div>
@@ -146,9 +146,9 @@ export default function OrdersPage() {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Đơn hàng {selectedOrder?.orderCode}</DialogTitle>
+            <DialogTitle>Order {selectedOrder?.orderCode}</DialogTitle>
             <DialogDescription>
-              {selectedOrder && formatDateTime(selectedOrder.createdAt)} — {selectedOrder?.sourceName && `Nguồn: ${selectedOrder.sourceName}`}
+              {selectedOrder && formatDateTime(selectedOrder.createdAt)} — {selectedOrder?.sourceName && `Source: ${selectedOrder.sourceName}`}
             </DialogDescription>
           </DialogHeader>
           {selectedOrder && (
@@ -156,12 +156,12 @@ export default function OrdersPage() {
               <div className="flex items-center justify-between">
                 <StatusBadge status={selectedOrder.status} customLabels={STATUS_LABELS} />
                 <div className="text-right">
-                  <div className="text-sm text-muted-foreground">Khách hàng</div>
-                  <div className="font-medium">{selectedOrder.customerName ?? selectedOrder.customerPhone ?? "Khách lẻ"}</div>
+                  <div className="text-sm text-muted-foreground">Customer</div>
+                  <div className="font-medium">{selectedOrder.customerName ?? selectedOrder.customerPhone ?? "Walk-in"}</div>
                 </div>
               </div>
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">Món đã gọi</h4>
+                <h4 className="text-sm font-medium">Ordered Items</h4>
                 <div className="rounded-lg border">
                   {menuItemNames.map((item, i) => (
                     <div key={i} className="flex items-center justify-between border-b p-3 last:border-0">
@@ -177,14 +177,14 @@ export default function OrdersPage() {
               <div className="space-y-1 text-right">
                 {selectedOrder.discountAmount > 0 && (
                   <div className="text-sm text-muted-foreground">
-                    Giảm giá: {selectedOrder.discountCode && `(${selectedOrder.discountCode}) `}-{formatCurrency(selectedOrder.discountAmount)}
+                    Discount: {selectedOrder.discountCode && `(${selectedOrder.discountCode}) `}-{formatCurrency(selectedOrder.discountAmount)}
                   </div>
                 )}
-                <div className="text-lg font-bold">Tổng: {formatCurrency(selectedOrder.totalAmount)}</div>
+                <div className="text-lg font-bold">Total: {formatCurrency(selectedOrder.totalAmount)}</div>
               </div>
               {selectedOrder.history && selectedOrder.history.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Lịch sử trạng thái</h4>
+                  <h4 className="text-sm font-medium">Status History</h4>
                   <div className="space-y-2">
                     {selectedOrder.history.map((h) => (
                       <div key={h.id} className="flex items-center gap-2 text-sm">
@@ -198,7 +198,7 @@ export default function OrdersPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">Cập nhật trạng thái</h4>
+                <h4 className="text-sm font-medium">Update Status</h4>
                 <div className="flex flex-wrap gap-2">
                   {(STATUS_FLOW[selectedOrder.status] ?? []).map((nextStatus) => (
                     <Button key={nextStatus} size="sm" variant={nextStatus === "cancelled" ? "destructive" : "default"}
@@ -209,7 +209,7 @@ export default function OrdersPage() {
                   ))}
                   {selectedOrder.status === "paid" && (
                     <Button size="sm" variant="outline" onClick={() => handleSetUnpaid(selectedOrder.id)} disabled={statusUpdating === selectedOrder.id}>
-                      Chuyển về chưa TT
+                      Mark as Unpaid
                     </Button>
                   )}
                 </div>

@@ -58,7 +58,7 @@ export default function ProductsPage() {
       setData(items)
       setCategories(cats)
       setAddons(adds)
-    } catch { toast.error("Không thể tải dữ liệu") }
+    } catch { toast.error("Failed to load data") }
     finally { setLoading(false) }
   }, [])
 
@@ -87,9 +87,9 @@ export default function ProductsPage() {
   }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) { toast.error("Vui lòng nhập tên món"); return }
-    if (formPrice <= 0) { toast.error("Giá không hợp lệ"); return }
-    if (!formCategoryId) { toast.error("Vui lòng chọn danh mục"); return }
+    if (!formName.trim()) { toast.error("Please enter a name"); return }
+    if (formPrice <= 0) { toast.error("Invalid price"); return }
+    if (!formCategoryId) { toast.error("Please select a category"); return }
     setSubmitting(true)
     try {
       const base = {
@@ -99,10 +99,10 @@ export default function ProductsPage() {
       }
       if (editing) {
         await menuItemService.update(editing.id, base as MenuItemUpdateDto)
-        toast.success("Cập nhật món thành công")
+        toast.success("Product updated successfully")
       } else {
         await menuItemService.create(base as MenuItemCreateDto)
-        toast.success("Thêm món thành công")
+        toast.success("Product added successfully")
       }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
@@ -113,8 +113,8 @@ export default function ProductsPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await menuItemService.delete(deleteTarget.id); toast.success("Xóa món thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa món") }
+    try { await menuItemService.delete(deleteTarget.id); toast.success("Product deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete product") }
     finally { setDeleting(false) }
   }
 
@@ -126,7 +126,7 @@ export default function ProductsPage() {
   const columns: ColumnDef<MenuItem>[] = [
     {
       id: "avatar",
-      header: "Ảnh",
+      header: "Image",
       cell: ({ row }) => (
         row.original.imageUrl ? (
           <div className="relative size-10 overflow-hidden rounded-md">
@@ -135,12 +135,12 @@ export default function ProductsPage() {
         ) : <div className="size-10 rounded-md bg-muted" />
       ),
     },
-    { id: "name", accessorKey: "name", header: "Tên món" },
-    { id: "categoryName", accessorKey: "categoryName", header: "Danh mục", cell: ({ row }) => row.original.categoryName ?? "—" },
-    { id: "price", accessorKey: "price", header: "Giá", cell: ({ row }) => formatCurrency(row.original.price) },
+    { id: "name", accessorKey: "name", header: "Product Name" },
+    { id: "categoryName", accessorKey: "categoryName", header: "Category", cell: ({ row }) => row.original.categoryName ?? "—" },
+    { id: "price", accessorKey: "price", header: "Price", cell: ({ row }) => formatCurrency(row.original.price) },
     {
       id: "isActive",
-      header: "Trạng thái",
+      header: "Status",
       cell: ({ row }) => <StatusBadge status={row.original.isActive} />,
     },
     {
@@ -163,46 +163,46 @@ export default function ProductsPage() {
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem><BreadcrumbPage>Sản phẩm</BreadcrumbPage></BreadcrumbItem>
+              <BreadcrumbItem><BreadcrumbPage>Products</BreadcrumbPage></BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Tìm món..." loading={loading}
-          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Thêm món</Button>} />
+        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search products..." loading={loading}
+          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Add Product</Button>} />
       </div>
-      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Sửa món" : "Thêm món"} onSubmit={handleSubmit} submitting={submitting}>
+      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Edit Product" : "Add Product"} onSubmit={handleSubmit} submitting={submitting}>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Tên món</Label>
-              <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="VD: Phở bò" />
+              <Label htmlFor="name">Product Name</Label>
+              <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Beef Pho" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Giá</Label>
+              <Label htmlFor="price">Price</Label>
               <Input id="price" type="number" min={0} value={formPrice} onChange={(e) => setFormPrice(Number(e.target.value))} />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
-            <Textarea id="description" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Mô tả món ăn..." />
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Product description..." />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="categoryId">Danh mục</Label>
+            <Label htmlFor="categoryId">Category</Label>
             <NativeSelect id="categoryId" value={formCategoryId} onChange={(e) => setFormCategoryId(e.target.value)}>
-              <option value="">Chọn danh mục</option>
+              <option value="">Select category</option>
               {categories.filter((c) => c.isActive).map((c) => (
                 <option key={c.id} value={String(c.id)}>{c.name}</option>
               ))}
             </NativeSelect>
           </div>
           <div className="space-y-2">
-            <Label>Hình ảnh</Label>
+            <Label>Image</Label>
             <ImageUpload value={formImageUrl} onChange={setFormImageUrl} onUpload={handleUpload} />
           </div>
           <div className="space-y-2">
-            <Label>Topping đi kèm</Label>
+            <Label>Toppings</Label>
             <div className="grid grid-cols-2 gap-2">
               {addons.filter((a) => a.isActive).map((addon) => (
                 <label key={addon.id} className="flex items-center gap-2 rounded-lg border p-2 cursor-pointer hover:bg-muted">
@@ -215,7 +215,7 @@ export default function ProductsPage() {
           </div>
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={formIsActive} onCheckedChange={setFormIsActive} />
-            <Label htmlFor="isActive">Đang bán</Label>
+            <Label htmlFor="isActive">Available</Label>
           </div>
         </div>
       </CrudSheet>

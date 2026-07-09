@@ -13,7 +13,7 @@
 </script>
 
 <svelte:head>
-	<title>Màn Hình Bếp - Foodstore</title>
+	<title>Kitchen Display - Foodstore</title>
 </svelte:head>
 
 <div class="flex h-full flex-1 flex-col overflow-hidden bg-gray-100">
@@ -48,7 +48,7 @@
 				class="m-0 flex items-center gap-2.5 rounded-t-xl border-b border-gray-300 bg-white/50 px-5 py-4 text-lg font-bold text-gray-700"
 			>
 				<span class="text-xl">🔔</span>
-				Đơn Mới
+				New Orders
 				<span
 					class="ml-auto rounded-xl bg-white px-2.5 py-0.5 text-sm font-semibold text-gray-600 shadow-sm"
 					>{vm.pendingOrders.length}</span
@@ -109,13 +109,13 @@
 								class="flex-1 cursor-pointer rounded-md border-none bg-blue-500 py-3 text-base font-semibold text-white shadow-sm transition-all duration-200 hover:bg-blue-600"
 								onclick={() => vm.updateStatus(order.id, 'preparing')}
 							>
-								Bắt Đầu Nấu 🔥
+								Start Cooking 🔥
 							</button>
 						</div>
 					</div>
 				{/each}
 				{#if vm.pendingOrders.length === 0}
-					<div class="py-10 text-center text-base text-gray-400 italic">Không có đơn mới</div>
+					<div class="py-10 text-center text-base text-gray-400 italic">No new orders</div>
 				{/if}
 			</div>
 		</div>
@@ -131,7 +131,7 @@
 				class="m-0 flex items-center gap-2.5 rounded-t-xl border-b border-gray-300 bg-white/50 px-5 py-4 text-lg font-bold text-gray-700"
 			>
 				<span class="text-xl">🔥</span>
-				Đang Nấu
+				Cooking
 				<span
 					class="ml-auto rounded-xl bg-white px-2.5 py-0.5 text-sm font-semibold text-gray-600 shadow-sm"
 					>{vm.preparingOrders.length}</span
@@ -186,13 +186,13 @@
 								class="flex-1 cursor-pointer rounded-md border-none bg-emerald-500 py-3 text-base font-semibold text-white shadow-sm transition-all duration-200 hover:bg-emerald-600"
 								onclick={() => vm.updateStatus(order.id, 'served')}
 							>
-								Hoàn Thành ✅
+								Mark Done ✅
 							</button>
 						</div>
 					</div>
 				{/each}
 				{#if vm.preparingOrders.length === 0}
-					<div class="py-10 text-center text-base text-gray-400 italic">Không có món đang nấu</div>
+					<div class="py-10 text-center text-base text-gray-400 italic">No items being prepared</div>
 				{/if}
 			</div>
 		</div>
@@ -208,7 +208,7 @@
 				class="m-0 flex items-center gap-2.5 rounded-t-xl border-b border-gray-300 bg-white/50 px-5 py-4 text-lg font-bold text-gray-700"
 			>
 				<span class="text-xl">✅</span>
-				Đã Xong
+				Done
 				<span
 					class="ml-auto rounded-xl bg-white px-2.5 py-0.5 text-sm font-semibold text-gray-600 shadow-sm"
 					>{vm.completedOrders.length}</span
@@ -232,7 +232,7 @@
 				{/each}
 				{#if vm.completedOrders.length === 0}
 					<div class="col-span-full py-10 text-center text-base text-gray-400 italic">
-						Chưa có đơn hoàn thành
+						No completed orders yet
 					</div>
 				{/if}
 			</div>

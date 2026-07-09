@@ -58,7 +58,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   searchKey,
-  searchPlaceholder = "Tìm kiếm...",
+  searchPlaceholder = "Search...",
   pageSize = 10,
   loading,
   onRowClick,
@@ -108,7 +108,7 @@ export function DataTable<TData, TValue>({
             <DropdownMenuTrigger>
               <Button variant="outline" size="sm" className="h-9 gap-1.5">
                 <SlidersHorizontal className="size-3.5" />
-                <span className="hidden sm:inline">Cột</span>
+                <span className="hidden sm:inline">Columns</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -175,7 +175,7 @@ export function DataTable<TData, TValue>({
                 <TableCell colSpan={columns.length} className="h-32 text-center">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <ListFilter className="size-8" />
-                    <span>Không có dữ liệu</span>
+                    <span>No data</span>
                   </div>
                 </TableCell>
               </TableRow>
@@ -186,7 +186,7 @@ export function DataTable<TData, TValue>({
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} kết quả
+          {table.getFilteredRowModel().rows.length} results
         </p>
         <div className="flex items-center gap-2">
           <Button
@@ -206,7 +206,7 @@ export function DataTable<TData, TValue>({
             <ChevronLeft className="size-4" />
           </Button>
           <span className="min-w-[80px] text-center text-sm text-muted-foreground">
-            Trang {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
+            Page {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
           </span>
           <Button
             variant="outline"

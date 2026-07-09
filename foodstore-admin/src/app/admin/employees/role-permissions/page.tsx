@@ -34,7 +34,7 @@ export default function RolePermissionsPage() {
       const [rls, perms] = await Promise.all([roleService.getAll(), permissionService.getAll()])
       setRoles(rls.filter((r) => r.isActive))
       setPermissions(perms)
-    } catch { toast.error("Không thể tải dữ liệu") }
+    } catch { toast.error("Failed to load data") }
     finally { setLoading(false) }
   }, [])
 
@@ -44,7 +44,7 @@ export default function RolePermissionsPage() {
     if (!selectedRoleId) return
     permissionService.getRolePermissions(selectedRoleId).then((codes) => {
       setRolePermissionCodes(new Set(codes))
-    }).catch(() => toast.error("Không thể tải quyền của vai trò"))
+    }).catch(() => toast.error("Failed to load role permissions"))
   }, [selectedRoleId])
 
   const grouped = React.useMemo(() => {
@@ -93,8 +93,8 @@ export default function RolePermissionsPage() {
     setSaving(true)
     try {
       await permissionService.updateRolePermissions(selectedRoleId, Array.from(rolePermissionCodes))
-      toast.success("Cập nhật quyền thành công")
-    } catch { toast.error("Không thể cập nhật quyền") }
+      toast.success("Permissions updated successfully")
+    } catch { toast.error("Failed to update permissions") }
     finally { setSaving(false) }
   }
 
@@ -110,7 +110,7 @@ export default function RolePermissionsPage() {
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem><BreadcrumbPage>Phân quyền</BreadcrumbPage></BreadcrumbItem>
+              <BreadcrumbItem><BreadcrumbPage>Role Permissions</BreadcrumbPage></BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
@@ -123,7 +123,7 @@ export default function RolePermissionsPage() {
         ) : (
           <div className="flex gap-6">
             <div className="w-56 shrink-0 space-y-1">
-              <h3 className="mb-3 text-sm font-medium text-muted-foreground">Vai trò</h3>
+              <h3 className="mb-3 text-sm font-medium text-muted-foreground">Roles</h3>
               {roles.map((r) => (
                 <button
                   key={r.id}
@@ -144,7 +144,7 @@ export default function RolePermissionsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       {isProtected && (
-                        <span className="text-sm text-muted-foreground">Vai trò hệ thống — không thể chỉnh sửa</span>
+                        <span className="text-sm text-muted-foreground">System role — cannot be edited</span>
                       )}
                       <div className="flex gap-1">
                         {Object.keys(TEMPLATES).map((tpl) => (
@@ -155,7 +155,7 @@ export default function RolePermissionsPage() {
                       </div>
                       <Button onClick={handleSave} disabled={saving || isProtected} className="gap-1.5">
                         {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                        Lưu
+                        Save
                       </Button>
                     </div>
                   </div>
@@ -206,7 +206,7 @@ export default function RolePermissionsPage() {
                 </div>
               ) : (
                 <div className="flex h-64 items-center justify-center text-muted-foreground">
-                  Chọn một vai trò để xem và chỉnh sửa quyền
+                  Select a role to view and edit permissions
                 </div>
               )}
             </div>

@@ -7,7 +7,7 @@
 	<header
 		class="flex h-[70px] items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm"
 	>
-		<h1 class="m-0 text-2xl font-bold text-gray-900">👨‍🍳 Màn Hình Bếp</h1>
+		<h1 class="m-0 text-2xl font-bold text-gray-900">👨‍🍳 Kitchen Display</h1>
 		<div
 			class="rounded-full px-4 py-1.5 text-sm font-semibold transition-colors duration-200"
 			class:bg-green-100={kitchenState.isConnected}
@@ -17,7 +17,7 @@
 			class:bg-gray-100={!kitchenState.isConnected}
 			class:text-gray-500={!kitchenState.isConnected}
 		>
-			{kitchenState.isConnected ? '🟢 Đã kết nối' : '🔴 Mất kết nối'}
+			{kitchenState.isConnected ? '🟢 Connected' : '🔴 Disconnected'}
 		</div>
 	</header>
 

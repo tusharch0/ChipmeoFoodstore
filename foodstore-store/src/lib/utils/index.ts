@@ -1,7 +1,7 @@
 // Utility functions for formatting
 
 export function formatCurrency(amount: number): string {
-	return new Intl.NumberFormat('vi-VN', {
+	return new Intl.NumberFormat('en-US', {
 		style: 'currency',
 		currency: 'VND',
 		minimumFractionDigits: 0,
@@ -10,7 +10,7 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(date: string | Date): string {
-	return new Intl.DateTimeFormat('vi-VN', {
+	return new Intl.DateTimeFormat('en-US', {
 		year: 'numeric',
 		month: '2-digit',
 		day: '2-digit',
@@ -20,7 +20,7 @@ export function formatDate(date: string | Date): string {
 }
 
 export function formatTime(date: string | Date): string {
-	return new Intl.DateTimeFormat('vi-VN', {
+	return new Intl.DateTimeFormat('en-US', {
 		hour: '2-digit',
 		minute: '2-digit'
 	}).format(new Date(date));

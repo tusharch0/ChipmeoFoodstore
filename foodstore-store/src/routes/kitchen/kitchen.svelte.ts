@@ -11,9 +11,9 @@ export class KitchenState {
 	connection: signalR.HubConnection | null = null;
 
 	readonly tabs = [
-		{ id: 'pending' as const, label: 'Đơn Mới', icon: '🔔', color: 'red' },
-		{ id: 'preparing' as const, label: 'Đang Nấu', icon: '🔥', color: 'amber' },
-		{ id: 'completed' as const, label: 'Đã Xong', icon: '✅', color: 'green' }
+		{ id: 'pending' as const, label: 'New Orders', icon: '🔔', color: 'red' },
+		{ id: 'preparing' as const, label: 'Cooking', icon: '🔥', color: 'amber' },
+		{ id: 'completed' as const, label: 'Done', icon: '✅', color: 'green' }
 	] as const;
 
 	// Derived lists using Svelte 5 runes
@@ -142,14 +142,14 @@ export class KitchenState {
 			console.error(`Failed to update status to ${status}:`, err);
 			// Rollback on error
 			await this.init();
-			throw new Error('Lỗi cập nhật trạng thái. Vui lòng thử lại.');
+			throw new Error('Failed to update status. Please try again.');
 		}
 	}
 
 	formatTime(dateStr: string | undefined): string {
 		if (!dateStr) return '';
 		const date = new SvelteDate(dateStr);
-		return date.toLocaleTimeString('vi-VN', {
+		return date.toLocaleTimeString('en-US', {
 			hour: '2-digit',
 			minute: '2-digit'
 		});

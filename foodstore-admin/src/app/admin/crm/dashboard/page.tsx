@@ -33,16 +33,16 @@ export default function CrmDashboard() {
         setTotalRevenue(stats.total.revenue)
         setBirthdays(bdays)
       } catch {
-        toast.error("Không thể tải thống kê")
+        toast.error("Failed to load stats")
       }
     })()
   }, [])
 
   const cards = [
-    { label: "Tổng khách hàng", value: totalCustomers !== null ? totalCustomers.toLocaleString() : "…", icon: Users },
-    { label: "Đơn hàng hôm nay", value: todayOrders !== null ? todayOrders.toLocaleString() : "…", icon: ShoppingBag },
-    { label: "Doanh thu hôm nay", value: todayRevenue !== null ? formatCurrency(todayRevenue) : "…", icon: DollarSign },
-    { label: "Tổng doanh thu", value: totalRevenue !== null ? formatCurrency(totalRevenue) : "…", icon: TrendingUp },
+    { label: "Total Customers", value: totalCustomers !== null ? totalCustomers.toLocaleString() : "…", icon: Users },
+    { label: "Today's Orders", value: todayOrders !== null ? todayOrders.toLocaleString() : "…", icon: ShoppingBag },
+    { label: "Today's Revenue", value: todayRevenue !== null ? formatCurrency(todayRevenue) : "…", icon: DollarSign },
+    { label: "Total Revenue", value: totalRevenue !== null ? formatCurrency(totalRevenue) : "…", icon: TrendingUp },
   ]
 
   const levelBadge = (level?: string) => {
@@ -63,7 +63,7 @@ export default function CrmDashboard() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Tổng quan khách hàng</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Customer Overview</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -84,15 +84,15 @@ export default function CrmDashboard() {
         <div className="rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-3">
             <Cake className="size-5 text-pink-500" />
-            <h2 className="font-semibold">Sinh nhật khách hàng</h2>
+            <h2 className="font-semibold">Customer Birthdays</h2>
             {birthdays && birthdays.totalThisWeek > 0 && (
-              <Badge className="ml-auto">{birthdays.totalThisWeek} trong tuần này</Badge>
+              <Badge className="ml-auto">{birthdays.totalThisWeek} this week</Badge>
             )}
           </div>
           {!birthdays ? (
-            <p className="text-sm text-muted-foreground">Đang tải...</p>
+            <p className="text-sm text-muted-foreground">Loading...</p>
           ) : birthdays.thisWeek.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Không có khách hàng nào sinh nhật trong tuần này</p>
+            <p className="text-sm text-muted-foreground">No customer birthdays this week</p>
           ) : (
             <div className="space-y-2">
               {birthdays.thisWeek.map((c) => (

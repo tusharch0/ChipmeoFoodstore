@@ -12,9 +12,9 @@ import {
 type Tab = "profile" | "settings"
 
 const themes = [
-  { key: "light", icon: SunIcon, label: "Sáng" },
-  { key: "dark", icon: MoonIcon, label: "Tối" },
-  { key: "system", icon: MonitorIcon, label: "Theo hệ thống" },
+  { key: "light", icon: SunIcon, label: "Light" },
+  { key: "dark", icon: MoonIcon, label: "Dark" },
+  { key: "system", icon: MonitorIcon, label: "System" },
 ] as const
 
 export function SettingsDialog({
@@ -100,7 +100,7 @@ export function SettingsDialog({
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground"
           >
             <UserIcon className="size-4" />
-            Thông tin cá nhân
+            Profile
           </button>
           <button
             onClick={() => setTab("settings")}
@@ -108,14 +108,14 @@ export function SettingsDialog({
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground"
           >
             <SettingsIcon className="size-4" />
-            Cài đặt
+            Settings
           </button>
         </div>
 
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex items-center justify-between border-b px-6 py-4">
             <h2 className="text-lg font-semibold">
-              {tab === "profile" ? "Thông tin cá nhân" : "Cài đặt"}
+              {tab === "profile" ? "Profile" : "Settings"}
             </h2>
             <button
               onClick={onClose}
@@ -160,7 +160,7 @@ export function SettingsDialog({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Họ tên</label>
+                  <label className="text-sm font-medium text-muted-foreground">Full Name</label>
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -178,7 +178,7 @@ export function SettingsDialog({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Số điện thoại</label>
+                  <label className="text-sm font-medium text-muted-foreground">Phone Number</label>
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -193,20 +193,20 @@ export function SettingsDialog({
                     className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:pointer-events-none"
                   >
                     {saving && <Loader2Icon className="size-4 animate-spin" />}
-                    Lưu thay đổi
+                    Save Changes
                   </button>
                   <button
                     onClick={onClose}
                     className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-accent transition-colors"
                   >
-                    Hủy
+                    Cancel
                   </button>
                 </div>
               </div>
             ) : (
               <div className="space-y-8 max-w-lg">
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Giao diện</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Appearance</h3>
                   <div className="flex gap-3">
                     {themes.map((t) => {
                       const Icon = t.icon

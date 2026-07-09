@@ -50,7 +50,7 @@ export default function CombosPage() {
       const [combos, items] = await Promise.all([comboService.getAll(), menuItemService.getAll()])
       setData(combos)
       setMenuItems(items.filter((m) => m.isActive))
-    } catch { toast.error("Không thể tải dữ liệu") }
+    } catch { toast.error("Failed to load data") }
     finally { setLoading(false) }
   }, [])
 
@@ -84,17 +84,17 @@ export default function CombosPage() {
   }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) { toast.error("Vui lòng nhập tên combo"); return }
-    if (formComboPrice <= 0) { toast.error("Giá không hợp lệ"); return }
-    if (formItems.length === 0) { toast.error("Vui lòng thêm ít nhất 1 món vào combo"); return }
+    if (!formName.trim()) { toast.error("Please enter a combo name"); return }
+    if (formComboPrice <= 0) { toast.error("Invalid price"); return }
+    if (formItems.length === 0) { toast.error("Please add at least 1 item to the combo"); return }
     setSubmitting(true)
     try {
       const base = {
         name: formName.trim(), description: formDescription || undefined,
         comboPrice: formComboPrice, imageUrl: formImageUrl, isActive: formIsActive, items: formItems,
       }
-      if (editing) { await comboService.update(editing.id, base as ComboUpdateDto); toast.success("Cập nhật combo thành công") }
-      else { await comboService.create(base as ComboCreateDto); toast.success("Thêm combo thành công") }
+      if (editing) { await comboService.update(editing.id, base as ComboUpdateDto); toast.success("Combo updated successfully") }
+      else { await comboService.create(base as ComboCreateDto); toast.success("Combo added successfully") }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
     finally { setSubmitting(false) }
@@ -104,8 +104,8 @@ export default function CombosPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await comboService.delete(deleteTarget.id); toast.success("Xóa combo thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa combo") }
+    try { await comboService.delete(deleteTarget.id); toast.success("Combo deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete combo") }
     finally { setDeleting(false) }
   }
 
@@ -117,7 +117,7 @@ export default function CombosPage() {
   const columns: ColumnDef<Combo>[] = [
     {
       id: "imageUrl",
-      header: "Ảnh",
+      header: "Image",
       cell: ({ row }) => (
         row.original.imageUrl ? (
           <div className="relative size-10 overflow-hidden rounded-md">
@@ -126,10 +126,10 @@ export default function CombosPage() {
         ) : <div className="size-10 rounded-md bg-muted" />
       ),
     },
-    { id: "name", accessorKey: "name", header: "Tên combo" },
-    { id: "comboPrice", header: "Giá", cell: ({ row }) => formatCurrency(row.original.comboPrice) },
-    { id: "items", header: "Số món", cell: ({ row }) => row.original.items.length },
-    { id: "isActive", header: "Trạng thái", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
+    { id: "name", accessorKey: "name", header: "Combo Name" },
+    { id: "comboPrice", header: "Price", cell: ({ row }) => formatCurrency(row.original.comboPrice) },
+    { id: "items", header: "Items", cell: ({ row }) => row.original.items.length },
+    { id: "isActive", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
     { id: "actions", header: "", cell: ({ row }) => (
       <div className="flex justify-end gap-1">
         <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)}><Edit className="size-4" /></Button>
@@ -138,7 +138,7 @@ export default function CombosPage() {
     )},
   ]
 
-  const getMenuItemName = (id: string) => menuItems.find((m) => m.id === id)?.name ?? `Món #${id.slice(0, 8)}`
+  const getMenuItemName = (id: string) => menuItems.find((m) => m.id === id)?.name ?? `Item #${id.slice(0, 8)}`
 
   return (
     <>
@@ -146,51 +146,51 @@ export default function CombosPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Combo</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Combos</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Tìm combo..." loading={loading}
-          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Thêm combo</Button>} />
+        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search combos..." loading={loading}
+          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Add Combo</Button>} />
       </div>
-      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Sửa combo" : "Thêm combo"} onSubmit={handleSubmit} submitting={submitting}>
+      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Edit Combo" : "Add Combo"} onSubmit={handleSubmit} submitting={submitting}>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Tên combo</Label>
-              <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="VD: Combo gia đình" />
+              <Label htmlFor="name">Combo Name</Label>
+              <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Family Combo" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Giá combo</Label>
+              <Label htmlFor="price">Combo Price</Label>
               <Input id="price" type="number" min={0} value={formComboPrice} onChange={(e) => setFormComboPrice(Number(e.target.value))} />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea id="description" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label>Hình ảnh</Label>
+            <Label>Image</Label>
             <ImageUpload value={formImageUrl} onChange={setFormImageUrl} onUpload={handleUpload} />
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Món trong combo</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addComboItem}>+ Thêm món</Button>
+              <Label>Combo Items</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addComboItem}>+ Add Item</Button>
             </div>
             {formItems.map((item, index) => (
               <div key={index} className="flex items-end gap-2">
                 <div className="flex-1 space-y-2">
-                  <Label className="text-xs">Món</Label>
+                  <Label className="text-xs">Item</Label>
                   <NativeSelect value={item.menuItemId} onChange={(e) => updateComboItem(index, "menuItemId", e.target.value)}>
-                    <option value="0">Chọn món</option>
+                    <option value="0">Select item</option>
                     {menuItems.filter((m) => m.isActive).map((m) => (
                       <option key={m.id} value={String(m.id)}>{m.name}</option>
                     ))}
                   </NativeSelect>
                 </div>
                 <div className="w-20 space-y-2">
-                  <Label className="text-xs">SL</Label>
+                  <Label className="text-xs">Qty</Label>
                   <Input type="number" min={1} value={item.quantity} onChange={(e) => updateComboItem(index, "quantity", Number(e.target.value))} />
                 </div>
                 <Button variant="ghost" size="icon-sm" className="mb-0.5" onClick={() => removeComboItem(index)}>
@@ -200,13 +200,13 @@ export default function CombosPage() {
             ))}
             {formItems.length > 0 && (
               <div className="text-xs text-muted-foreground">
-                Gồm: {formItems.map((i) => `${getMenuItemName(i.menuItemId)} x${i.quantity}`).join(", ")}
+                Includes: {formItems.map((i) => `${getMenuItemName(i.menuItemId)} x${i.quantity}`).join(", ")}
               </div>
             )}
           </div>
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={formIsActive} onCheckedChange={setFormIsActive} />
-            <Label htmlFor="isActive">Đang bán</Label>
+            <Label htmlFor="isActive">Available</Label>
           </div>
         </div>
       </CrudSheet>

@@ -57,11 +57,11 @@ class POSStore {
 			await this.loadMenuData();
 			await this.loadSources();
 			await this.initSignalR();
-			this.showNotification('Đã tải dữ liệu thành công!', 'success');
+			this.showNotification('Data loaded successfully!', 'success');
 		} catch (error) {
 			console.error('Failed to load data:', error);
-			const message = error instanceof Error ? error.message : 'Không thể kết nối server';
-			this.showNotification('Lỗi tải dữ liệu: ' + message, 'error');
+			const message = error instanceof Error ? error.message : 'Unable to connect to server';
+			this.showNotification('Failed to load data: ' + message, 'error');
 		} finally {
 			this.loading = false;
 		}
@@ -94,12 +94,12 @@ class POSStore {
 
 	handleMenuUpdate = () => {
 		this.loadMenuData();
-		this.showNotification('Dữ liệu thực đơn đã được cập nhật!', 'success');
+		this.showNotification('Menu data has been updated!', 'success');
 	};
 
 	handleSourceUpdate = () => {
 		this.loadSources();
-		this.showNotification('Trạng thái nguồn đơn đã được cập nhật!', 'success');
+		this.showNotification('Order source status has been updated!', 'success');
 	};
 
 	cleanup() {
@@ -113,7 +113,7 @@ class POSStore {
 
 	generatePassword(fullName: string): string {
 		if (!fullName) return DEFAULT_CUSTOMER_PASSWORD;
-		// Get initials (e.g. "Phạm Quốc Tuấn" -> "pqt")
+		// Get initials (e.g. "John Doe" -> "jd")
 		const initials = fullName
 			.trim()
 			.split(/\s+/)
@@ -184,7 +184,7 @@ class POSStore {
 		});
 
 		this.showAddonModal = false;
-		this.showNotification('Đã thêm vào giỏ!', 'success');
+		this.showNotification('Added to cart!', 'success');
 	}
 
 	handleComboClick(combo: Combo) {
@@ -196,13 +196,13 @@ class POSStore {
 			selectedAddons: [],
 			subtotal: combo.comboPrice
 		});
-		this.showNotification(`Đã thêm ${combo.name} vào giỏ`, 'success');
+		this.showNotification(`Added ${combo.name} to cart`, 'success');
 	}
 
 	selectSource(source: Source) {
 		cartActions.setSource(source);
 		this.showSourceModal = false;
-		this.showNotification(`Đã chọn ${source.name}`, 'success');
+		this.showNotification(`Selected ${source.name}`, 'success');
 	}
 
 	async fetchPendingOrders() {
@@ -211,7 +211,7 @@ class POSStore {
 			this.pendingOrders = await ordersAPI.getByStatus('pending');
 		} catch (error) {
 			console.error('Failed to fetch orders:', error);
-			this.showNotification('Lỗi tải danh sách hóa đơn', 'error');
+			this.showNotification('Failed to load order list', 'error');
 		} finally {
 			this.loadingOrders = false;
 		}
@@ -228,23 +228,23 @@ class POSStore {
 	}
 
 	async cancelOrder(orderId: number) {
-		if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')) return;
+		if (!confirm('Are you sure you want to cancel this order?')) return;
 
 		try {
 			// Change from delete to soft cancel (update status to cancelled)
 			await posAPI.updateOrderStatus(orderId, 'cancelled');
-			this.showNotification('Đã hủy đơn hàng', 'success');
+			this.showNotification('Order cancelled', 'success');
 			this.fetchPendingOrders();
 		} catch (error) {
 			console.error('Failed to cancel order:', error);
-			this.showNotification('Lỗi khi hủy đơn hàng', 'error');
+			this.showNotification('Failed to cancel order', 'error');
 		}
 	}
 
 	clearCartAndEditState() {
 		cartActions.clearCart();
 		this.editingOrder = null;
-		this.showNotification('Đã xóa giỏ hàng', 'success');
+		this.showNotification('Cart cleared', 'success');
 	}
 
 	async adjustOrder(order: Order) {
@@ -317,16 +317,16 @@ class POSStore {
 			// 6. UI Updates
 			this.showOrdersModal = false;
 			this.isCartOpen = true;
-			this.showNotification(`Đang sửa đơn hàng #${order.orderCode}`, 'success');
+			this.showNotification(`Editing order #${order.orderCode}`, 'success');
 		} catch (error) {
 			console.error('Failed to adjust order:', error);
-			this.showNotification('Lỗi khi nạp lại đơn hàng', 'error');
+			this.showNotification('Failed to reload order', 'error');
 			this.editingOrder = null; // Reset if fail
 		}
 	}
 
 	handlePaymentComplete() {
-		this.showNotification('Thanh toán thành công!', 'success');
+		this.showNotification('Payment successful!', 'success');
 		this.fetchPendingOrders();
 	}
 
@@ -345,10 +345,10 @@ class POSStore {
 		try {
 			const { customerAPI } = await import('$lib/api/index.js');
 			this.selectedCustomer = await customerAPI.lookupByPhone(phone);
-			this.showNotification(`Đã chọn khách hàng: ${this.selectedCustomer.fullName}`, 'success');
+			this.showNotification(`Selected customer: ${this.selectedCustomer.fullName}`, 'success');
 			this.showCustomerModal = false;
 		} catch {
-			this.showNotification('Không tìm thấy khách hàng. Hãy tạo mới.', 'error');
+			this.showNotification('Customer not found. Please create a new one.', 'error');
 			this.selectedCustomer = null;
 		}
 	}
@@ -378,16 +378,16 @@ class POSStore {
 
 			// Show password hint toast
 			this.showNotification(
-				`Đã tạo khách hàng! Mật khẩu mặc định: ${this.generatePassword(data.fullName)}`,
+				`Customer created! Default password: ${this.generatePassword(data.fullName)}`,
 				'success'
 			);
 
 			this.selectedCustomer = newCustomer;
-			this.showNotification('Đã tạo khách hàng mới!', 'success');
+			this.showNotification('New customer created!', 'success');
 			this.showCustomerModal = false;
 			this.showCustomerModal = false;
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Lỗi tạo khách hàng';
+			const message = error instanceof Error ? error.message : 'Failed to create customer';
 			this.showNotification(message, 'error');
 		}
 	}
@@ -395,17 +395,17 @@ class POSStore {
 	removeCustomer() {
 		this.selectedCustomer = null;
 		this.customerPhone = '';
-		this.showNotification('Đã bỏ chọn khách hàng', 'success');
+		this.showNotification('Customer deselected', 'success');
 	}
 
 	async handlePlaceOrder() {
 		const currentCart = get(cart);
 		if (currentCart.items.length === 0) {
-			this.showNotification('Giỏ hàng trống!', 'error');
+			this.showNotification('Cart is empty!', 'error');
 			return;
 		}
 		if (!currentCart.selectedSource) {
-			this.showNotification('Vui lòng chọn nguồn đơn trước khi gọi món!', 'error');
+			this.showNotification('Please select an order source before placing an order!', 'error');
 			this.showSourceModal = true;
 			return;
 		}
@@ -434,11 +434,11 @@ class POSStore {
 			if (this.editingOrder) {
 				// Update existing order
 				orderResult = await posAPI.updateOrder(this.editingOrder.id, orderData);
-				this.showNotification(`Đã cập nhật đơn hàng #${this.editingOrder.code}!`, 'success');
+				this.showNotification(`Order #${this.editingOrder.code} updated!`, 'success');
 			} else {
 				// Create new order
 				orderResult = await posAPI.createOrder(orderData);
-				this.showNotification('Đã tạo hóa đơn mới!', 'success');
+				this.showNotification('New order created!', 'success');
 			}
 
 			cartActions.clearCart();
@@ -452,7 +452,7 @@ class POSStore {
 		} catch (error) {
 			console.error('Order failed:', error);
 			const message = error instanceof Error ? error.message : 'Unknown error';
-			this.showNotification('Lỗi xử lý đơn hàng: ' + message, 'error');
+			this.showNotification('Order processing error: ' + message, 'error');
 		} finally {
 			this.loading = false;
 		}

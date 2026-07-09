@@ -37,7 +37,7 @@ export default function RolesPage() {
   const loadData = React.useCallback(async () => {
     setLoading(true)
     try { const res = await roleService.getAll(); setData(res) }
-    catch { toast.error("Không thể tải vai trò") }
+    catch { toast.error("Failed to load roles") }
     finally { setLoading(false) }
   }, [])
 
@@ -48,12 +48,12 @@ export default function RolesPage() {
   const openEdit = (item: Role) => { setEditing(item); setFormName(item.name); setFormDescription(item.description ?? ""); setFormDefaultRoute(item.defaultRoute ?? ""); setFormIsActive(item.isActive); setSheetOpen(true) }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) { toast.error("Vui lòng nhập tên vai trò"); return }
+    if (!formName.trim()) { toast.error("Please enter a role name"); return }
     setSubmitting(true)
     try {
       const dto = { name: formName.trim(), description: formDescription || undefined, defaultRoute: formDefaultRoute || undefined, isActive: formIsActive }
-      if (editing) { await roleService.update(editing.id, dto as RoleUpdateDto); toast.success("Cập nhật vai trò thành công") }
-      else { await roleService.create(dto as RoleCreateDto); toast.success("Thêm vai trò thành công") }
+      if (editing) { await roleService.update(editing.id, dto as RoleUpdateDto); toast.success("Role updated successfully") }
+      else { await roleService.create(dto as RoleCreateDto); toast.success("Role added successfully") }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
     finally { setSubmitting(false) }
@@ -63,18 +63,18 @@ export default function RolesPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await roleService.delete(deleteTarget.id); toast.success("Xóa vai trò thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa vai trò") }
+    try { await roleService.delete(deleteTarget.id); toast.success("Role deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete role") }
     finally { setDeleting(false) }
   }
 
   const protectedRoles = ["root", "customer"]
 
   const columns: ColumnDef<Role>[] = [
-    { id: "name", accessorKey: "name", header: "Tên vai trò" },
-    { id: "description", accessorKey: "description", header: "Mô tả", cell: ({ row }) => row.original.description || "—" },
+    { id: "name", accessorKey: "name", header: "Role Name" },
+    { id: "description", accessorKey: "description", header: "Description", cell: ({ row }) => row.original.description || "—" },
     { id: "defaultRoute", accessorKey: "defaultRoute", header: "Route", cell: ({ row }) => row.original.defaultRoute || "—" },
-    { id: "isActive", header: "Trạng thái", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
+    { id: "isActive", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
     { id: "actions", header: "", cell: ({ row }) => {
       const isProtected = protectedRoles.includes(row.original.name.toLowerCase())
       return (
@@ -92,30 +92,30 @@ export default function RolesPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Vai trò</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Roles</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Tìm vai trò..." loading={loading}
-          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Thêm vai trò</Button>} />
+        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search roles..." loading={loading}
+          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Add Role</Button>} />
       </div>
-      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Sửa vai trò" : "Thêm vai trò"} onSubmit={handleSubmit} submitting={submitting}>
+      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Edit Role" : "Add Role"} onSubmit={handleSubmit} submitting={submitting}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Tên vai trò</Label>
-            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="VD: Quản lý, Nhân viên..." />
+            <Label htmlFor="name">Role Name</Label>
+            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Manager, Staff..." />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
+            <Label htmlFor="description">Description</Label>
             <Input id="description" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="defaultRoute">Route mặc định</Label>
-            <Input id="defaultRoute" value={formDefaultRoute} onChange={(e) => setFormDefaultRoute(e.target.value)} placeholder="VD: /admin/food/orders" />
+            <Label htmlFor="defaultRoute">Default Route</Label>
+            <Input id="defaultRoute" value={formDefaultRoute} onChange={(e) => setFormDefaultRoute(e.target.value)} placeholder="e.g. /admin/food/orders" />
           </div>
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={formIsActive} onCheckedChange={setFormIsActive} />
-            <Label htmlFor="isActive">Hoạt động</Label>
+            <Label htmlFor="isActive">Active</Label>
           </div>
         </div>
       </CrudSheet>

@@ -48,7 +48,7 @@ export default function AnalyticsPage() {
         dashboardService.getRecommendations().catch(() => []),
       ])
       setAnalytics(a); setForecast(f); setRecommendations(r)
-    } catch { toast.error("Không thể tải dữ liệu") }
+    } catch { toast.error("Failed to load data") }
     finally { setLoading(false) }
   }, [fromDate, toDate])
 
@@ -61,24 +61,24 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Thống kê & Dự báo</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Analytics & Forecast</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <div className="flex items-center gap-3 rounded-xl border bg-card p-2 shadow-sm">
           <NativeSelect className="w-fit border-0 bg-transparent font-medium" value={dateRange} onChange={(e) => { const v = e.target.value; setDateRange(v); if (v !== "custom") updateDatesFromRange(v) }}>
-            <option value="7days">7 ngày qua</option>
-            <option value="30days">30 ngày qua</option>
-            <option value="thisMonth">Tháng này</option>
-            <option value="last3Months">3 tháng qua</option>
-            <option value="custom">Tùy chỉnh</option>
+            <option value="7days">Last 7 days</option>
+            <option value="30days">Last 30 days</option>
+            <option value="thisMonth">This month</option>
+            <option value="last3Months">Last 3 months</option>
+            <option value="custom">Custom</option>
           </NativeSelect>
           {dateRange === "custom" && (
             <div className="flex items-center gap-2 border-l pl-3">
               <Input type="date" className="h-8 w-fit" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
               <span className="text-muted-foreground">→</span>
               <Input type="date" className="h-8 w-fit" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-              <Button size="sm" onClick={loadData}>Lọc</Button>
+              <Button size="sm" onClick={loadData}>Filter</Button>
             </div>
           )}
         </div>
@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Tổng doanh thu</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                   <BarChart3 className="size-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Thuế VAT</CardTitle>
+                  <CardTitle className="text-sm font-medium">VAT Tax</CardTitle>
                   <Receipt className="size-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -112,7 +112,7 @@ export default function AnalyticsPage() {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Tổng đơn hàng</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
                   <ShoppingCart className="size-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -123,7 +123,7 @@ export default function AnalyticsPage() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
-                <CardHeader><CardTitle>Xu hướng doanh thu</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Revenue Trend</CardTitle></CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart data={analytics.revenueChart}>
@@ -137,7 +137,7 @@ export default function AnalyticsPage() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader><CardTitle>Số lượng đơn hàng</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Order Count</CardTitle></CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={280}>
                     <BarChart data={analytics.ordersChart}>
@@ -161,8 +161,8 @@ export default function AnalyticsPage() {
                         <Wand2 className="size-5 text-white" />
                       </div>
                       <div>
-                        <CardTitle>Dự báo doanh thu (AI Powered)</CardTitle>
-                        <CardDescription>Machine Learning dự đoán 7 ngày tới</CardDescription>
+                        <CardTitle>Revenue Forecast (AI Powered)</CardTitle>
+                        <CardDescription>Machine Learning predicts the next 7 days</CardDescription>
                       </div>
                     </div>
                     <div className="rounded border border-indigo-200 bg-card px-2 py-1 font-mono text-xs text-indigo-700">SSA-Forecasting</div>
@@ -172,20 +172,20 @@ export default function AnalyticsPage() {
                   <ResponsiveContainer width="100%" height={280}>
                     <LineChart data={forecast.forecasts}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => new Date(v).toLocaleDateString("vi-VN", { day: "numeric", month: "numeric" })} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => new Date(v).toLocaleDateString("en-US", { day: "numeric", month: "numeric" })} />
                       <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(v) => formatCurrency(Number(v))} labelFormatter={(l) => new Date(l).toLocaleDateString("vi-VN")} />
+                      <Tooltip formatter={(v) => formatCurrency(Number(v))} labelFormatter={(l) => new Date(l).toLocaleDateString("en-US")} />
                       <Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: "#6366f1" }} />
                     </LineChart>
                   </ResponsiveContainer>
-                  <p className="mt-2 text-center text-xs italic text-muted-foreground">* Dự báo mang tính tham khảo dựa trên dữ liệu lịch sử.</p>
+                  <p className="mt-2 text-center text-xs italic text-muted-foreground">* Forecast is for reference only, based on historical data.</p>
                 </CardContent>
               </Card>
             )}
 
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
-                <CardHeader><CardTitle>Top món bán chạy</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Top Selling Items</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {analytics.topItems.map((item, i) => (
@@ -204,7 +204,7 @@ export default function AnalyticsPage() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader><CardTitle>Combo bán chạy</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Popular Combos</CardTitle></CardHeader>
                 <CardContent>
                   {analytics.popularCombos.length > 0 ? (
                     <div className="space-y-3">
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
                           <div className="flex-1">
                             <p className="text-sm font-medium">{item.name}</p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <span>{item.quantity} đã bán</span>
+                              <span>{item.quantity} sold</span>
                               <span>•</span>
                               <span>{formatCurrency(item.revenue)}</span>
                             </div>
@@ -223,7 +223,7 @@ export default function AnalyticsPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="py-8 text-center text-muted-foreground">Chưa có dữ liệu combo</p>
+                    <p className="py-8 text-center text-muted-foreground">No combo data yet</p>
                   )}
                 </CardContent>
               </Card>
@@ -237,8 +237,8 @@ export default function AnalyticsPage() {
                       <Wand2 className="size-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle>Gợi ý Combo (AI Recommendation)</CardTitle>
-                      <CardDescription>Các món thường đi cùng nhau - Cơ hội tạo Combo mới</CardDescription>
+                      <CardTitle>Combo Suggestions (AI Recommendation)</CardTitle>
+                      <CardDescription>Items frequently ordered together - Combo opportunities</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -256,7 +256,7 @@ export default function AnalyticsPage() {
                             <p className="text-xs text-muted-foreground line-through">{formatCurrency(rec.totalOriginalPrice)}</p>
                             <p className="text-lg font-bold text-purple-600">{formatCurrency(rec.suggestedPrice)}</p>
                           </div>
-                          <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-600">Tiết kiệm 10%</span>
+                          <span className="rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-600">Save 10%</span>
                         </div>
                         <p className="mt-2 border-t pt-2 text-xs text-muted-foreground">{rec.reason}</p>
                       </div>
@@ -267,7 +267,7 @@ export default function AnalyticsPage() {
             )}
           </>
         ) : (
-          <div className="flex h-64 items-center justify-center text-muted-foreground">Không có dữ liệu</div>
+          <div className="flex h-64 items-center justify-center text-muted-foreground">No data</div>
         )}
       </div>
     </>

@@ -65,7 +65,7 @@
 	>
 		<!-- Header -->
 		<div class="flex items-center justify-between border-b bg-gray-50 p-4">
-			<h3 class="font-bold text-gray-900">Cắt ảnh</h3>
+			<h3 class="font-bold text-gray-900">Crop Image</h3>
 			<button onclick={onCancel} class="text-gray-500 hover:text-gray-700" aria-label="Close">
 				<Icon name="tabler:x" class="h-6 w-6" />
 			</button>
@@ -79,8 +79,8 @@
 
 		<!-- Footer / Controls -->
 		<div class="flex justify-end gap-3 border-t bg-gray-50 p-4">
-			<Button variant="secondary" onclick={onCancel}>Hủy</Button>
-			<Button variant="primary" onclick={handleCrop}>Xác nhận & Cắt</Button>
+			<Button variant="secondary" onclick={onCancel}>Cancel</Button>
+			<Button variant="primary" onclick={handleCrop}>Confirm & Crop</Button>
 		</div>
 	</div>
 </div>

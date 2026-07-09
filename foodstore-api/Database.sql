@@ -1,64 +1,54 @@
 ﻿-- ==========================================================
--- 1. THIáº¾T Láº¬P DATABASE VÃ€ MÃ”I TRÆ¯á»œNG
+-- 1. DATABASE SETUP
 -- ==========================================================
-
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'pos_shop')
-BEGIN
-    CREATE DATABASE [pos_shop] 
-    COLLATE SQL_Latin1_General_CP1_CI_AI;
-END
-GO
-
-USE [pos_shop];
-GO
-
-ALTER DATABASE [pos_shop] COLLATE SQL_Latin1_General_CP1_CI_AI;
-GO
+-- Create database separately before running this script:
+--   CREATE DATABASE pos_shop;
+-- \c pos_shop;
 
 -- ==========================================================
 -- 2. CATEGORY / MENU / ADDONS
 -- ==========================================================
 
 CREATE TABLE categories (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    name NVARCHAR(100) NOT NULL,
-    description NVARCHAR(255),
-    image_url NVARCHAR(500), -- https://media.foodstore.local/categories/xxx.jpg
-    is_active BIT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE()
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255),
+    image_url VARCHAR(500),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE menu_items (
-    id INT PRIMARY KEY IDENTITY(1,1),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     category_id INT,
-    name NVARCHAR(100) NOT NULL,
-    description NVARCHAR(500),
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(500),
     price DECIMAL(10,0) NOT NULL,
-    image_url NVARCHAR(500), -- https://media.foodstore.local/menu-items/xxx.jpg
-    is_active BIT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE(),
+    image_url VARCHAR(500),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
 );
 
 CREATE TABLE addons (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    name NVARCHAR(100) NOT NULL,
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(100) NOT NULL,
     price DECIMAL(10,0) NOT NULL DEFAULT 0,
-    is_active BIT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE()
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- ==========================================================
--- 3. MENU ITEM â†” ADDONS
+-- 3. MENU ITEM ↔ ADDONS
 -- ==========================================================
 
 CREATE TABLE menu_item_addons (
-    id INT PRIMARY KEY IDENTITY(1,1),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     menu_item_id INT NOT NULL,
     addon_id INT NOT NULL,
     price_override DECIMAL(10,0) NULL,
-    is_active BIT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE(),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE,
     FOREIGN KEY (addon_id) REFERENCES addons(id) ON DELETE CASCADE,
     CONSTRAINT UQ_menu_item_addon UNIQUE (menu_item_id, addon_id)
@@ -69,21 +59,21 @@ CREATE TABLE menu_item_addons (
 -- ==========================================================
 
 CREATE TABLE combos (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    name NVARCHAR(100) NOT NULL,
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(100) NOT NULL,
     combo_price DECIMAL(10,0) NOT NULL,
-    description NVARCHAR(500),
-    image_url NVARCHAR(500), -- https://media.foodstore.local/combos/xxx.jpg
-    is_active BIT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE()
+    description VARCHAR(500),
+    image_url VARCHAR(500),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE combo_items (
-    id INT PRIMARY KEY IDENTITY(1,1),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     combo_id INT NOT NULL,
     menu_item_id INT NOT NULL,
     quantity INT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE(),
+    created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (combo_id) REFERENCES combos(id) ON DELETE CASCADE,
     FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE CASCADE,
     CONSTRAINT UQ_combo_item UNIQUE (combo_id, menu_item_id)
@@ -94,19 +84,19 @@ CREATE TABLE combo_items (
 -- ==========================================================
 
 CREATE TABLE discounts (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    code NVARCHAR(50) NOT NULL UNIQUE,
-    name NVARCHAR(100) NOT NULL,
-    type NVARCHAR(10) NOT NULL CHECK (type IN (N'percent', N'amount')),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    code VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(10) NOT NULL CHECK (type IN ('percent', 'amount')),
     value DECIMAL(10,2) NOT NULL,
     max_discount_amount DECIMAL(10,0),
     min_order_amount DECIMAL(10,0) DEFAULT 0,
     usage_limit INT,
     used_count INT DEFAULT 0,
-    is_active BIT DEFAULT 1,
-    start_date DATETIME2,
-    end_date DATETIME2,
-    created_at DATETIME2 DEFAULT GETDATE()
+    is_active BOOLEAN DEFAULT TRUE,
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- ==========================================================
@@ -114,10 +104,10 @@ CREATE TABLE discounts (
 -- ==========================================================
 
 CREATE TABLE sources (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    name NVARCHAR(50) NOT NULL,
-    is_active BIT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE()
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(50) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- ==========================================================
@@ -125,29 +115,29 @@ CREATE TABLE sources (
 -- ==========================================================
 
 CREATE TABLE roles (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    name NVARCHAR(50) NOT NULL UNIQUE,
-    description NVARCHAR(255),
-    default_route NVARCHAR(100) DEFAULT '/admin',
-    is_active BIT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE()
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    default_route VARCHAR(100) DEFAULT '/admin',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE permissions (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    code NVARCHAR(100) NOT NULL UNIQUE,
-    name NVARCHAR(100) NOT NULL,
-    description NVARCHAR(255),
-    module NVARCHAR(50),
-    created_at DATETIME2 DEFAULT GETDATE()
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    code VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255),
+    module VARCHAR(50),
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE role_permissions (
-    id INT PRIMARY KEY IDENTITY(1,1),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     role_id INT NOT NULL,
     permission_id INT NOT NULL,
-    is_active BIT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE(),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE,
     CONSTRAINT UQ_role_permission UNIQUE (role_id, permission_id)
@@ -158,17 +148,17 @@ CREATE TABLE role_permissions (
 -- ==========================================================
 
 CREATE TABLE employees (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    full_name NVARCHAR(100) NOT NULL,
-    username NVARCHAR(50) NOT NULL UNIQUE,
-    password_hash NVARCHAR(255) NOT NULL,
-    email NVARCHAR(100),
-    phone NVARCHAR(20),
-    avatar_url NVARCHAR(500), -- https://media.foodstore.local/avatars/xxx.jpg
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    full_name VARCHAR(100) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    avatar_url VARCHAR(500),
     role_id INT NOT NULL,
-    is_active BIT DEFAULT 1,
-    last_login DATETIME2,
-    created_at DATETIME2 DEFAULT GETDATE(),
+    is_active BOOLEAN DEFAULT TRUE,
+    last_login TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
@@ -177,15 +167,15 @@ CREATE TABLE employees (
 -- ==========================================================
 
 CREATE TABLE customers (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    full_name NVARCHAR(100) NOT NULL,
-    phone NVARCHAR(20),
-    email NVARCHAR(100) NOT NULL,
-    password_hash NVARCHAR(255) NOT NULL,
-    avatar_url NVARCHAR(500),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    full_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    email VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    avatar_url VARCHAR(500),
     points INT DEFAULT 0,
-    is_active BIT DEFAULT 1,
-    created_at DATETIME2 DEFAULT GETDATE(),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT UQ_customers_phone UNIQUE (phone),
     CONSTRAINT UQ_customers_email UNIQUE (email)
 );
@@ -195,25 +185,25 @@ CREATE TABLE customers (
 -- ==========================================================
 
 CREATE TABLE orders (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    order_code NVARCHAR(20) NOT NULL UNIQUE,
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    order_code VARCHAR(20) NOT NULL UNIQUE,
     source_id INT,
-    employee_id INT, -- Nullable because online orders might not have an employee initially
-    customer_id INT, -- Link to registered customer
+    employee_id INT,
+    customer_id INT,
     discount_id INT,
     subtotal_amount DECIMAL(10,0) DEFAULT 0,
     discount_amount DECIMAL(10,0) DEFAULT 0,
     vat_amount DECIMAL(10,0) DEFAULT 0,
     total_amount DECIMAL(10,0) DEFAULT 0,
-    qr_payment_url NVARCHAR(MAX),
-    paid_at DATETIME2,
-    status NVARCHAR(20) DEFAULT N'pending'
-        CHECK (status IN (N'pending', N'confirmed', N'preparing', N'ready', N'served', N'paid', N'cancelled')),
-    note NVARCHAR(500),
-    printed_at DATETIME2,
+    qr_payment_url TEXT,
+    paid_at TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'pending'
+        CHECK (status IN ('pending', 'confirmed', 'preparing', 'ready', 'served', 'paid', 'cancelled')),
+    note VARCHAR(500),
+    printed_at TIMESTAMP,
     updated_by INT,
-    created_at DATETIME2 DEFAULT GETDATE(),
-    updated_at DATETIME2 DEFAULT GETDATE(),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (source_id) REFERENCES sources(id),
     FOREIGN KEY (employee_id) REFERENCES employees(id),
     FOREIGN KEY (customer_id) REFERENCES customers(id),
@@ -226,45 +216,46 @@ CREATE TABLE orders (
 -- ==========================================================
 
 CREATE TABLE order_items (
-    id INT PRIMARY KEY IDENTITY(1,1),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     order_id INT NOT NULL,
     menu_item_id INT,
     combo_id INT,
-    menu_item_name NVARCHAR(255) NOT NULL,
+    menu_item_name VARCHAR(255) NOT NULL,
     unit_price DECIMAL(10,0) NOT NULL,
     quantity INT DEFAULT 1,
     total_price DECIMAL(10,0) NOT NULL,
-    note NVARCHAR(255),
-    created_at DATETIME2 DEFAULT GETDATE(),
+    note VARCHAR(255),
+    created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (menu_item_id) REFERENCES menu_items(id) ON DELETE SET NULL,
     FOREIGN KEY (combo_id) REFERENCES combos(id) ON DELETE SET NULL
 );
+
 -- ==========================================================
 -- 11. ORDER STATUS HISTORY
 -- ==========================================================
 
 CREATE TABLE order_status_history (
-    id INT PRIMARY KEY IDENTITY(1,1),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     order_id INT NOT NULL,
-    from_status NVARCHAR(20),
-    to_status NVARCHAR(20) NOT NULL,
+    from_status VARCHAR(20),
+    to_status VARCHAR(20) NOT NULL,
     changed_by INT,
-    changed_at DATETIME2 DEFAULT GETDATE(),
-    note NVARCHAR(500),
+    changed_at TIMESTAMP DEFAULT NOW(),
+    note VARCHAR(500),
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (changed_by) REFERENCES employees(id)
 );
 
 CREATE TABLE order_item_addons (
-    id INT PRIMARY KEY IDENTITY(1,1),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     order_item_id INT NOT NULL,
     addon_id INT NOT NULL,
-    addon_name NVARCHAR(100) NOT NULL,
+    addon_name VARCHAR(100) NOT NULL,
     quantity INT DEFAULT 1,
     unit_price DECIMAL(10,0) NOT NULL,
     total_price DECIMAL(10,0) NOT NULL,
-    created_at DATETIME2 DEFAULT GETDATE(),
+    created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (order_item_id) REFERENCES order_items(id) ON DELETE CASCADE,
     FOREIGN KEY (addon_id) REFERENCES addons(id)
 );
@@ -274,15 +265,15 @@ CREATE TABLE order_item_addons (
 -- ==========================================================
 
 CREATE TABLE payments (
-    id INT PRIMARY KEY IDENTITY(1,1),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     order_id INT NOT NULL,
     amount DECIMAL(10,0) NOT NULL,
-    method NVARCHAR(20) NOT NULL CHECK (method IN (N'cash', N'qr', N'zalopay', N'momo', N'card')),
-    reference_code NVARCHAR(100),
-    status NVARCHAR(20) DEFAULT N'success' 
-        CHECK (status IN (N'pending', N'success', N'failed', N'refunded')),
-    paid_at DATETIME2 DEFAULT GETDATE(),
-    created_at DATETIME2 DEFAULT GETDATE(),
+    method VARCHAR(20) NOT NULL CHECK (method IN ('cash', 'qr', 'zalopay', 'momo', 'card')),
+    reference_code VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'success'
+        CHECK (status IN ('pending', 'success', 'failed', 'refunded')),
+    paid_at TIMESTAMP DEFAULT NOW(),
+    created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 
@@ -291,49 +282,45 @@ CREATE TABLE payments (
 -- ==========================================================
 
 CREATE TABLE payment_settings (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    bank_id NVARCHAR(50) NOT NULL,
-    bank_account NVARCHAR(50) NOT NULL,
-    bank_name NVARCHAR(100) NOT NULL,
-    bank_account_name NVARCHAR(200),
-    template NVARCHAR(20) DEFAULT N'compact2',
-    is_active BIT DEFAULT 1,
-    is_default BIT DEFAULT 0
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    bank_id VARCHAR(50) NOT NULL,
+    bank_account VARCHAR(50) NOT NULL,
+    bank_name VARCHAR(100) NOT NULL,
+    bank_account_name VARCHAR(200),
+    template VARCHAR(20) DEFAULT 'compact2',
+    is_active BOOLEAN DEFAULT TRUE,
+    is_default BOOLEAN DEFAULT FALSE
 );
 
 CREATE UNIQUE INDEX UQ_payment_settings_default
 ON payment_settings(is_default)
-WHERE is_default = 1;
-
-
+WHERE is_default = TRUE;
 
 -- ==========================================================
 -- 15. BLOG
 -- ==========================================================
 
 CREATE TABLE blog_posts (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    title NVARCHAR(255) NOT NULL,
-    slug NVARCHAR(255) NOT NULL UNIQUE,
-    excerpt NVARCHAR(500),
-    content NVARCHAR(MAX),
-    thumbnail_url NVARCHAR(500),
-    status NVARCHAR(20) DEFAULT N'draft' CHECK (status IN (N'draft', N'published', N'archived')),
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    excerpt VARCHAR(500),
+    content TEXT,
+    thumbnail_url VARCHAR(500),
+    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
     author_id INT,
-    published_at DATETIME2,
-    -- SEO Fields
-    meta_title NVARCHAR(100),           -- SEO title (max 60 chars recommended)
-    meta_description NVARCHAR(200),     -- Meta description (max 160 chars)
-    focus_keyword NVARCHAR(100),        -- Primary keyword for SEO scoring
-    keywords NVARCHAR(500),             -- Comma-separated keywords
-    canonical_url NVARCHAR(500),        -- Canonical URL if different
-    og_image_url NVARCHAR(500),         -- Open Graph image
-    reading_time INT DEFAULT 0,         -- Estimated reading time in minutes
-    word_count INT DEFAULT 0,           -- Word count
-    seo_score INT DEFAULT 0,            -- SEO score 0-100
-    -- Timestamps
-    created_at DATETIME2 DEFAULT GETDATE(),
-    updated_at DATETIME2 DEFAULT GETDATE(),
+    published_at TIMESTAMP,
+    meta_title VARCHAR(100),
+    meta_description VARCHAR(200),
+    focus_keyword VARCHAR(100),
+    keywords VARCHAR(500),
+    canonical_url VARCHAR(500),
+    og_image_url VARCHAR(500),
+    reading_time INT DEFAULT 0,
+    word_count INT DEFAULT 0,
+    seo_score INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (author_id) REFERENCES employees(id) ON DELETE SET NULL
 );
 
@@ -342,12 +329,12 @@ CREATE TABLE blog_posts (
 -- ==========================================================
 
 CREATE TABLE tags (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    name NVARCHAR(100) NOT NULL,
-    slug NVARCHAR(100) NOT NULL UNIQUE,
-    description NVARCHAR(255),
-    color NVARCHAR(7) DEFAULT '#f59e0b', -- Hex color for UI
-    created_at DATETIME2 DEFAULT GETDATE()
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    color VARCHAR(7) DEFAULT '#f59e0b',
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE blog_post_tags (
@@ -358,33 +345,23 @@ CREATE TABLE blog_post_tags (
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
-
-
 -- ==========================================================
 -- 16. MEDIA (IMAGES/FILES)
--- Centralized storage at https://media.foodstore.local/
--- Folder structure:
---   /avatars/       - Customer avatars
---   /menu-items/    - Menu item images
---   /combos/        - Combo images
---   /categories/    - Category images  
---   /blog/          - Blog post images & thumbnails
---   /misc/          - Other files
 -- ==========================================================
 
 CREATE TABLE media (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    file_name NVARCHAR(255) NOT NULL,
-    folder NVARCHAR(100) NOT NULL DEFAULT 'misc', -- avatars, menu-items, combos, categories, blog, misc
-    file_url NVARCHAR(500) NOT NULL, -- Full URL: https://media.foodstore.local/menu-items/abc.jpg
-    file_type NVARCHAR(50) NOT NULL, -- image/jpeg, image/png, etc.
+    id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    file_name VARCHAR(255) NOT NULL,
+    folder VARCHAR(100) NOT NULL DEFAULT 'misc',
+    file_url VARCHAR(500) NOT NULL,
+    file_type VARCHAR(50) NOT NULL,
     file_size BIGINT,
-    alt_text NVARCHAR(255), -- SEO alt text
-    uploaded_by_employee INT, -- Employee who uploaded (nullable)
-    uploaded_by_customer INT, -- Customer who uploaded (nullable)
-    entity_type NVARCHAR(50), -- menu_item, combo, category, blog_post, customer, etc.
-    entity_id INT, -- ID of the related entity
-    created_at DATETIME2 DEFAULT GETDATE(),
+    alt_text VARCHAR(255),
+    uploaded_by_employee INT,
+    uploaded_by_customer INT,
+    entity_type VARCHAR(50),
+    entity_id INT,
+    created_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (uploaded_by_employee) REFERENCES employees(id) ON DELETE SET NULL,
     FOREIGN KEY (uploaded_by_customer) REFERENCES customers(id) ON DELETE SET NULL
 );
@@ -412,8 +389,6 @@ CREATE INDEX IX_employees_role_id ON employees(role_id);
 CREATE INDEX IX_discounts_code ON discounts(code);
 CREATE INDEX IX_discounts_is_active ON discounts(is_active);
 
-
-
 -- Composite Indexes for Performance
 CREATE INDEX IX_orders_status_created_at ON orders(status, created_at);
 CREATE INDEX IX_orders_source_status ON orders(source_id, status);
@@ -423,10 +398,10 @@ CREATE INDEX IX_order_status_history_order ON order_status_history(order_id, cha
 CREATE INDEX IX_employees_role_active ON employees(role_id, is_active);
 CREATE INDEX IX_payments_order_status ON payments(order_id, status);
 
--- Filtered Indexes
-CREATE INDEX IX_orders_active ON orders(id) WHERE status IN (N'pending', N'preparing', N'paid');
-CREATE INDEX IX_payments_success ON payments(order_id) WHERE status = N'success';
-CREATE INDEX IX_menu_items_active_price ON menu_items(price) WHERE is_active = 1;
+-- Partial Indexes
+CREATE INDEX IX_orders_active ON orders(id) WHERE status IN ('pending', 'preparing', 'paid');
+CREATE INDEX IX_payments_success ON payments(order_id) WHERE status = 'success';
+CREATE INDEX IX_menu_items_active_price ON menu_items(price) WHERE is_active = TRUE;
 
 -- Blog index
 CREATE INDEX IX_blog_posts_slug ON blog_posts(slug);

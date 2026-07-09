@@ -3,17 +3,17 @@
 import { Badge } from "@/components/ui/badge"
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" | "ghost" | "link" }> = {
-  active: { label: "Hoạt động", variant: "default" },
-  inactive: { label: "Ngừng hoạt động", variant: "secondary" },
-  pending: { label: "Chờ xử lý", variant: "outline" },
-  confirmed: { label: "Đã xác nhận", variant: "default" },
-  preparing: { label: "Đang nấu", variant: "ghost" },
-  ready: { label: "Sẵn sàng", variant: "default" },
-  served: { label: "Đã phục vụ", variant: "secondary" },
-  paid: { label: "Đã thanh toán", variant: "default" },
-  cancelled: { label: "Đã hủy", variant: "destructive" },
-  true: { label: "Hoạt động", variant: "default" },
-  false: { label: "Ngừng hoạt động", variant: "secondary" },
+  active: { label: "Active", variant: "default" },
+  inactive: { label: "Inactive", variant: "secondary" },
+  pending: { label: "Pending", variant: "outline" },
+  confirmed: { label: "Confirmed", variant: "default" },
+  preparing: { label: "Preparing", variant: "ghost" },
+  ready: { label: "Ready", variant: "default" },
+  served: { label: "Served", variant: "secondary" },
+  paid: { label: "Paid", variant: "default" },
+  cancelled: { label: "Cancelled", variant: "destructive" },
+  true: { label: "Active", variant: "default" },
+  false: { label: "Inactive", variant: "secondary" },
 }
 
 interface StatusBadgeProps {

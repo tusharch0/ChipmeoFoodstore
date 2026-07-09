@@ -52,7 +52,7 @@
 			<div
 				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"
 			></div>
-			<p class="font-medium text-gray-500">Đang kiểm tra bảo mật...</p>
+			<p class="font-medium text-gray-500">Checking authentication...</p>
 		</div>
 	</div>
 {/if}

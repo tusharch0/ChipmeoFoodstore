@@ -32,11 +32,11 @@ interface ConfirmDialogProps {
 export function ConfirmDialog({
   open,
   onOpenChange,
-  title = "Xác nhận",
-  description = "Bạn có chắc chắn muốn thực hiện hành động này?",
+  title = "Confirm",
+  description = "Are you sure you want to perform this action?",
   onConfirm,
   loading,
-  confirmLabel = "Xác nhận",
+  confirmLabel = "Confirm",
   variant = "destructive",
   trigger,
 }: ConfirmDialogProps) {
@@ -59,7 +59,7 @@ export function ConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Hủy</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm} disabled={loading}>
             {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
             {confirmLabel}
@@ -87,9 +87,9 @@ export function DeleteConfirmDialog({
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Xóa"
-      description={itemName ? `Bạn có chắc chắn muốn xóa "${itemName}"? Hành động này không thể hoàn tác.` : "Bạn có chắc chắn muốn xóa mục này?"}
-      confirmLabel="Xóa"
+      title="Delete"
+      description={itemName ? `Are you sure you want to delete "${itemName}"? This action cannot be undone.` : "Are you sure you want to delete this item?"}
+      confirmLabel="Delete"
       variant="destructive"
       onConfirm={onConfirm}
       loading={loading}

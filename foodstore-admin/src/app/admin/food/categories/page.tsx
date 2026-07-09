@@ -42,7 +42,7 @@ export default function CategoriesPage() {
     try {
       const res = await categoryService.getAll()
       setData(res)
-    } catch { toast.error("Không thể tải danh mục") }
+    } catch { toast.error("Failed to load categories") }
     finally { setLoading(false) }
   }, [])
 
@@ -62,15 +62,15 @@ export default function CategoriesPage() {
   }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) { toast.error("Vui lòng nhập tên danh mục"); return }
+    if (!formName.trim()) { toast.error("Please enter a category name"); return }
     setSubmitting(true)
     try {
       if (editing) {
         await categoryService.update(editing.id, { name: formName.trim(), description: formDescription || undefined, imageUrl: formImageUrl, isActive: formIsActive })
-        toast.success("Cập nhật danh mục thành công")
+        toast.success("Category updated successfully")
       } else {
         await categoryService.create({ name: formName.trim(), description: formDescription || undefined, imageUrl: formImageUrl, isActive: formIsActive })
-        toast.success("Thêm danh mục thành công")
+        toast.success("Category added successfully")
       }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
@@ -81,8 +81,8 @@ export default function CategoriesPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await categoryService.delete(deleteTarget.id); toast.success("Xóa danh mục thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa danh mục") }
+    try { await categoryService.delete(deleteTarget.id); toast.success("Category deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete category") }
     finally { setDeleting(false) }
   }
 
@@ -94,7 +94,7 @@ export default function CategoriesPage() {
   const columns: ColumnDef<Category>[] = [
     {
       id: "imageUrl",
-      header: "Ảnh",
+      header: "Image",
       cell: ({ row }) => (
         row.original.imageUrl ? (
           <div className="relative size-10 overflow-hidden rounded-md">
@@ -103,9 +103,9 @@ export default function CategoriesPage() {
         ) : <div className="size-10 rounded-md bg-muted" />
       ),
     },
-    { id: "name", accessorKey: "name", header: "Tên" },
-    { id: "description", accessorKey: "description", header: "Mô tả", cell: ({ row }) => row.original.description || "—" },
-    { id: "isActive", header: "Trạng thái", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
+    { id: "name", accessorKey: "name", header: "Name" },
+    { id: "description", accessorKey: "description", header: "Description", cell: ({ row }) => row.original.description || "—" },
+    { id: "isActive", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
     {
       id: "actions",
       header: "",
@@ -126,32 +126,32 @@ export default function CategoriesPage() {
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem><BreadcrumbPage>Danh mục</BreadcrumbPage></BreadcrumbItem>
+              <BreadcrumbItem><BreadcrumbPage>Categories</BreadcrumbPage></BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Tìm danh mục..." loading={loading}
-          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Thêm danh mục</Button>} />
+        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search categories..." loading={loading}
+          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Add Category</Button>} />
       </div>
-      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Sửa danh mục" : "Thêm danh mục"} onSubmit={handleSubmit} submitting={submitting}>
+      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Edit Category" : "Add Category"} onSubmit={handleSubmit} submitting={submitting}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Tên danh mục</Label>
-            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Nhập tên danh mục" />
+            <Label htmlFor="name">Category Name</Label>
+            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Enter category name" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
-            <Input id="description" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Nhập mô tả" />
+            <Label htmlFor="description">Description</Label>
+            <Input id="description" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Enter description" />
           </div>
           <div className="space-y-2">
-            <Label>Hình ảnh</Label>
+            <Label>Image</Label>
             <ImageUpload value={formImageUrl} onChange={setFormImageUrl} onUpload={handleUpload} />
           </div>
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={formIsActive} onCheckedChange={setFormIsActive} />
-            <Label htmlFor="isActive">Hoạt động</Label>
+            <Label htmlFor="isActive">Active</Label>
           </div>
         </div>
       </CrudSheet>

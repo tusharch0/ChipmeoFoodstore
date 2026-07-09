@@ -19,7 +19,7 @@
 		errorMessage = '';
 
 		if (!username || !password) {
-			errorMessage = 'Vui lòng nhập đầy đủ thông tin.';
+			errorMessage = 'Please fill in all fields.';
 			return;
 		}
 
@@ -28,17 +28,17 @@
 			const result = await auth.loginAPI(username, password);
 			if (result.success) {
 				if (result.user?.roleName === 'customer') {
-					errorMessage = 'Tài khoản không có quyền truy cập.';
+					errorMessage = 'Account does not have access permission.';
 					loading = false;
 					return;
 				}
 				await goto(resolveDefaultRoute(result.user?.defaultRoute));
 			} else {
-				errorMessage = result.error || 'Đăng nhập thất bại.';
+				errorMessage = result.error || 'Login failed.';
 			}
 		} catch (err) {
 			console.error(err);
-			errorMessage = 'Đã có lỗi xảy ra.';
+			errorMessage = 'An error occurred.';
 		} finally {
 			loading = false;
 		}
@@ -52,7 +52,7 @@
 </script>
 
 <svelte:head>
-	<title>Đăng nhập - Foodstore</title>
+	<title>Login - Foodstore</title>
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center bg-neutral-secondary-soft p-4">
@@ -61,7 +61,7 @@
 			<div class="mb-6 flex flex-col items-center">
 				<img src="/cmfs_removed_bg.png" class="mb-4 h-16 w-16 rounded-full" alt="Foodstore Logo" />
 				<h1 class="mb-1 text-2xl font-bold text-heading">Foodstore</h1>
-				<p class="text-body">Đăng nhập để tiếp tục</p>
+				<p class="text-body">Sign in to continue</p>
 			</div>
 
 			<form onsubmit={handleSubmit}>
@@ -77,7 +77,7 @@
 
 				<div class="mb-4">
 					<label for="auth-username" class="mb-2.5 block text-sm font-medium text-heading">
-						Tên đăng nhập
+						Username
 					</label>
 					<input
 						type="text"
@@ -85,7 +85,7 @@
 						bind:value={username}
 						onkeydown={handleKeydown}
 						class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2.5 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
-						placeholder="Nhập tên đăng nhập"
+						placeholder="Enter username"
 						disabled={loading}
 						required
 					/>
@@ -93,7 +93,7 @@
 
 				<div class="mb-6">
 					<label for="auth-password" class="mb-2.5 block text-sm font-medium text-heading">
-						Mật khẩu
+						Password
 					</label>
 					<div class="relative">
 						<input
@@ -102,7 +102,7 @@
 							bind:value={password}
 							onkeydown={handleKeydown}
 							class="block w-full rounded-base border border-default-medium bg-neutral-secondary-medium px-3 py-2.5 pr-10 text-sm text-heading shadow-xs placeholder:text-body focus:border-brand focus:ring-brand"
-							placeholder="Nhập mật khẩu"
+							placeholder="Enter password"
 							disabled={loading}
 							required
 						/>
@@ -126,7 +126,7 @@
 					disabled={loading}
 					class="mb-3 w-full rounded-base bg-brand px-4 py-2.5 text-sm font-medium leading-5 text-white shadow-xs hover:bg-brand-strong focus:outline-none focus:ring-4 focus:ring-brand-medium box-border border border-transparent disabled:cursor-not-allowed disabled:opacity-50"
 				>
-					{loading ? 'Đang xử lý...' : 'Đăng nhập'}
+					{loading ? 'Processing...' : 'Sign in'}
 				</button>
 			</form>
 		</div>

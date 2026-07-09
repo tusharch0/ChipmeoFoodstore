@@ -12,7 +12,7 @@
 <div class="flex flex-col items-center">
 	{#if total > 0}
 		<p class="mb-3 text-sm text-body">
-			Hiển thị <span class="font-medium text-heading">{(page - 1) * 10 + 1}</span> -
+			Showing <span class="font-medium text-heading">{(page - 1) * 10 + 1}</span> -
 			<span class="font-medium text-heading">{Math.min(page * 10, total)}</span>
 			/ <span class="font-medium text-heading">{total}</span>
 		</p>
@@ -25,7 +25,7 @@
 					disabled={page <= 1}
 					class="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium rounded-s-base text-sm px-3 h-9 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					Đầu
+					First
 				</button>
 			</li>
 			<li>
@@ -34,7 +34,7 @@
 					disabled={page <= 1}
 					class="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm px-3 h-9 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					Trước
+					Prev
 				</button>
 			</li>
 			{#each Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -60,7 +60,7 @@
 					disabled={page >= totalPages}
 					class="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium text-sm px-3 h-9 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					Sau
+					Next
 				</button>
 			</li>
 			<li>
@@ -69,7 +69,7 @@
 					disabled={page >= totalPages}
 					class="flex items-center justify-center text-body bg-neutral-secondary-medium box-border border border-default-medium hover:bg-neutral-tertiary-medium hover:text-heading font-medium rounded-e-base text-sm px-3 h-9 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					Cuối
+					Last
 				</button>
 			</li>
 		</ul>

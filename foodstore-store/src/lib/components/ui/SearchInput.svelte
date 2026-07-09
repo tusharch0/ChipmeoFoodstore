@@ -11,7 +11,7 @@
 
 	let {
 		value = $bindable(''),
-		placeholder = 'Tìm kiếm...',
+		placeholder = 'Search...',
 		oninput,
 		onchange,
 		class: className = ''

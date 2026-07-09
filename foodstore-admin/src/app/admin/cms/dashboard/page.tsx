@@ -28,20 +28,20 @@ export default function CmsDashboard() {
         setCategoryCount(cats.length)
         setTagCount(tags.length)
       } catch {
-        toast.error("Không thể tải thống kê CMS")
+        toast.error("Failed to load CMS stats")
       }
     })()
   }, [])
 
   const cards = [
-    { label: "Tổng bài viết", value: stats?.totalPosts ?? "…", icon: FileText },
-    { label: "Đã xuất bản", value: stats?.publishedPosts ?? "…", icon: Eye },
-    { label: "Bản nháp", value: stats?.draftPosts ?? "…", icon: Edit },
-    { label: "Đã lên lịch", value: stats?.scheduledPosts ?? "…", icon: Clock },
-    { label: "Danh mục", value: categoryCount, icon: FileText },
-    { label: "Thẻ", value: tagCount, icon: FileText },
-    { label: "Tổng lượt xem", value: stats?.totalViews?.toLocaleString() ?? "…", icon: Eye },
-    { label: "Bài nổi bật", value: stats?.featuredPostsCount ?? "…", icon: Calendar },
+    { label: "Total Posts", value: stats?.totalPosts ?? "…", icon: FileText },
+    { label: "Published", value: stats?.publishedPosts ?? "…", icon: Eye },
+    { label: "Drafts", value: stats?.draftPosts ?? "…", icon: Edit },
+    { label: "Scheduled", value: stats?.scheduledPosts ?? "…", icon: Clock },
+    { label: "Categories", value: categoryCount, icon: FileText },
+    { label: "Tags", value: tagCount, icon: FileText },
+    { label: "Total Views", value: stats?.totalViews?.toLocaleString() ?? "…", icon: Eye },
+    { label: "Featured Posts", value: stats?.featuredPostsCount ?? "…", icon: Calendar },
   ]
 
   return (
@@ -50,7 +50,7 @@ export default function CmsDashboard() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Tổng quan bài viết</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Blog Overview</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

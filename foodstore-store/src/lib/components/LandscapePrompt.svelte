@@ -35,9 +35,9 @@
 		<div class="mb-8 animate-bounce">
 			<Icon name="tabler:device-mobile" class="h-24 w-24 text-indigo-400" />
 		</div>
-		<h2 class="mb-4 text-2xl font-bold">Vui lòng xoay ngang thiết bị</h2>
+		<h2 class="mb-4 text-2xl font-bold">Please rotate your device to landscape</h2>
 		<p class="text-lg text-gray-300">
-			Ứng dụng Foodstore POS được tối ưu hóa cho màn hình ngang để có trải nghiệm tốt nhất.
+			The Foodstore POS app is optimized for landscape mode for the best experience.
 		</p>
 		<div class="mt-8">
 			<Icon

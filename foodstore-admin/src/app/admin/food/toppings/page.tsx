@@ -37,7 +37,7 @@ export default function ToppingsPage() {
   const loadData = React.useCallback(async () => {
     setLoading(true)
     try { const res = await addonService.getAll(); setData(res) }
-    catch { toast.error("Không thể tải topping") }
+    catch { toast.error("Failed to load toppings") }
     finally { setLoading(false) }
   }, [])
 
@@ -48,16 +48,16 @@ export default function ToppingsPage() {
   const openEdit = (item: Addon) => { setEditing(item); setFormName(item.name); setFormPrice(item.price); setFormIsActive(item.isActive); setSheetOpen(true) }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) { toast.error("Vui lòng nhập tên topping"); return }
-    if (formPrice < 0) { toast.error("Giá không hợp lệ"); return }
+    if (!formName.trim()) { toast.error("Please enter a topping name"); return }
+    if (formPrice < 0) { toast.error("Invalid price"); return }
     setSubmitting(true)
     try {
       if (editing) {
         await addonService.update(editing.id, { name: formName.trim(), price: formPrice, isActive: formIsActive } as AddonUpdateDto)
-        toast.success("Cập nhật topping thành công")
+        toast.success("Topping updated successfully")
       } else {
         await addonService.create({ name: formName.trim(), price: formPrice, isActive: formIsActive } as AddonCreateDto)
-        toast.success("Thêm topping thành công")
+        toast.success("Topping added successfully")
       }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
@@ -68,15 +68,15 @@ export default function ToppingsPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await addonService.delete(deleteTarget.id); toast.success("Xóa topping thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa topping") }
+    try { await addonService.delete(deleteTarget.id); toast.success("Topping deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete topping") }
     finally { setDeleting(false) }
   }
 
   const columns: ColumnDef<Addon>[] = [
-    { id: "name", accessorKey: "name", header: "Tên" },
-    { id: "price", accessorKey: "price", header: "Giá", cell: ({ row }) => formatCurrency(row.original.price) },
-    { id: "isActive", header: "Trạng thái", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
+    { id: "name", accessorKey: "name", header: "Name" },
+    { id: "price", accessorKey: "price", header: "Price", cell: ({ row }) => formatCurrency(row.original.price) },
+    { id: "isActive", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
     { id: "actions", header: "", cell: ({ row }) => (
       <div className="flex justify-end gap-1">
         <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)}><Edit className="size-4" /></Button>
@@ -95,22 +95,22 @@ export default function ToppingsPage() {
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Tìm topping..." loading={loading}
-          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Thêm topping</Button>} />
+        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search toppings..." loading={loading}
+          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Add Topping</Button>} />
       </div>
-      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Sửa topping" : "Thêm topping"} onSubmit={handleSubmit} submitting={submitting}>
+      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Edit Topping" : "Add Topping"} onSubmit={handleSubmit} submitting={submitting}>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Tên topping</Label>
-            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="VD: Trân châu, Thạch..." />
+            <Label htmlFor="name">Topping Name</Label>
+            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Boba, Jelly..." />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="price">Giá</Label>
+            <Label htmlFor="price">Price</Label>
             <Input id="price" type="number" min={0} value={formPrice} onChange={(e) => setFormPrice(Number(e.target.value))} />
           </div>
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={formIsActive} onCheckedChange={setFormIsActive} />
-            <Label htmlFor="isActive">Hoạt động</Label>
+            <Label htmlFor="isActive">Active</Label>
           </div>
         </div>
       </CrudSheet>

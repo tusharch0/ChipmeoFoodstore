@@ -103,18 +103,18 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={() => onOpenSettings("profile")}>
                 <UserIcon />
-                Thông tin cá nhân
+                Profile
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onOpenSettings("settings")}>
                 <SettingsIcon />
-                Cài đặt
+                Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={logout}>
                 <LogOutIcon />
-                Đăng xuất
+                Sign out
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

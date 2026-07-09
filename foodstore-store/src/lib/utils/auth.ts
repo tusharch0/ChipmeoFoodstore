@@ -76,7 +76,7 @@ function createAuthStore() {
 			} catch (error: any) {
 				console.error('Login error:', error);
 				// Handle specific API error messages if available
-				let errorMessage = error.message || 'Lỗi kết nối server';
+				let errorMessage = error.message || 'Server connection error';
 
 				// If the error is an object with an error property (from backend)
 				if (error.error) {

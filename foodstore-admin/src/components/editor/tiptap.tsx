@@ -37,7 +37,7 @@ export function Tiptap({ content, onChange, placeholder }: TiptapProps) {
       StarterKit.configure({ heading: { levels: [1, 2, 3] }, link: false }),
       Image.configure({ inline: false }),
       LinkExtension.configure({ openOnClick: false }),
-      Placeholder.configure({ placeholder: placeholder ?? "Bắt đầu viết nội dung..." }),
+      Placeholder.configure({ placeholder: placeholder ?? "Start writing content..." }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Highlight,
     ],
@@ -56,7 +56,7 @@ export function Tiptap({ content, onChange, placeholder }: TiptapProps) {
       editor.chain().focus().setImage({ src: result.fileUrl }).run()
       setImageDialogOpen(false)
     } catch {
-      alert("Upload thất bại")
+      alert("Upload failed")
     } finally {
       setUploading(false)
       e.target.value = ""
@@ -78,7 +78,7 @@ export function Tiptap({ content, onChange, placeholder }: TiptapProps) {
     setLinkDialogOpen(false)
   }
 
-  if (!mounted || !editor) return <div className="border rounded-lg p-4 min-h-[300px]"><p className="text-muted-foreground text-sm">Đang tải trình soạn thảo...</p></div>
+  if (!mounted || !editor) return <div className="border rounded-lg p-4 min-h-[300px]"><p className="text-muted-foreground text-sm">Loading editor...</p></div>
 
   const ToolbarButton = ({ onClick, pressed, children }: { onClick: () => void; pressed: boolean; children: React.ReactNode }) => (
     <Toggle pressed={pressed} onPressedChange={onClick} size="sm">{children}</Toggle>
@@ -119,26 +119,26 @@ export function Tiptap({ content, onChange, placeholder }: TiptapProps) {
             <ImageIcon className="size-4" />
           </Button>
           <DialogContent className="sm:max-w-md">
-            <DialogHeader><DialogTitle>Thêm ảnh</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Add Image</DialogTitle></DialogHeader>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label>Upload từ máy tính</Label>
+                <Label>Upload from computer</Label>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" className="relative" disabled={uploading}>
-                    <Upload className="size-4 mr-1" />{uploading ? "Đang tải..." : "Chọn file"}
+                    <Upload className="size-4 mr-1" />{uploading ? "Uploading..." : "Choose File"}
                     <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleUploadImage} disabled={uploading} />
                   </Button>
                 </div>
               </div>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center"><Separator className="w-full" /></div>
-                <div className="relative flex justify-center"><span className="bg-background px-2 text-xs text-muted-foreground">hoặc nhập URL</span></div>
+                <div className="relative flex justify-center"><span className="bg-background px-2 text-xs text-muted-foreground">or enter URL</span></div>
               </div>
               <div className="grid gap-2">
-                <Label>URL ảnh</Label>
+                <Label>Image URL</Label>
                 <div className="flex gap-2">
                   <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." />
-                  <Button onClick={handleInsertImageUrl} disabled={!imageUrl.trim()}>Thêm</Button>
+                  <Button onClick={handleInsertImageUrl} disabled={!imageUrl.trim()}>Add</Button>
                 </div>
               </div>
             </div>
@@ -150,10 +150,10 @@ export function Tiptap({ content, onChange, placeholder }: TiptapProps) {
             <LinkIcon className="size-4" />
           </Button>
           <DialogContent className="sm:max-w-md">
-            <DialogHeader><DialogTitle>Thêm liên kết</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Add Link</DialogTitle></DialogHeader>
             <div className="flex gap-2">
               <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://..." />
-              <Button onClick={handleInsertLink} disabled={!linkUrl.trim()}>Thêm</Button>
+              <Button onClick={handleInsertLink} disabled={!linkUrl.trim()}>Add</Button>
             </div>
           </DialogContent>
         </Dialog>

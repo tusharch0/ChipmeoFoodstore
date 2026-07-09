@@ -48,7 +48,7 @@ export default function EmployeeAllPage() {
     try {
       const [emps, rls] = await Promise.all([employeeService.getAll(), roleService.getAll()])
       setData(emps); setRoles(rls.filter((r) => r.isActive))
-    } catch { toast.error("Không thể tải dữ liệu") }
+    } catch { toast.error("Failed to load data") }
     finally { setLoading(false) }
   }, [])
 
@@ -66,16 +66,16 @@ export default function EmployeeAllPage() {
   }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) { toast.error("Vui lòng nhập họ tên"); return }
+    if (!formName.trim()) { toast.error("Please enter a name"); return }
     setSubmitting(true)
     try {
       const base = { fullName: formName.trim(), email: formEmail || undefined, phone: formPhone || undefined, isActive: formIsActive, roleId: formRoleId, avatarUrl: formImage || undefined }
       if (editing) {
         await employeeService.update(editing.id, base as EmployeeUpdateDto)
-        toast.success("Cập nhật nhân viên thành công")
+        toast.success("Employee updated successfully")
       } else {
         await employeeService.create({ ...base, password: formPassword || "123456" } as EmployeeCreateDto)
-        toast.success("Thêm nhân viên thành công")
+        toast.success("Employee added successfully")
       }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
@@ -86,23 +86,23 @@ export default function EmployeeAllPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await employeeService.delete(deleteTarget.id); toast.success("Xóa nhân viên thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa nhân viên") }
+    try { await employeeService.delete(deleteTarget.id); toast.success("Employee deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete employee") }
     finally { setDeleting(false) }
   }
 
   const columns: ColumnDef<Employee>[] = [
-    { id: "fullName", accessorKey: "fullName", header: "Họ tên", cell: ({ row }) => (
+    { id: "fullName", accessorKey: "fullName", header: "Name", cell: ({ row }) => (
       <div className="flex items-center gap-2">
         {row.original.avatarUrl ? <img src={row.original.avatarUrl} alt="" className="size-8 rounded-full object-cover" /> : <div className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium">{row.original.fullName.charAt(0)}</div>}
         <span>{row.original.fullName}</span>
       </div>
     )},
     { id: "email", accessorKey: "email", header: "Email", cell: ({ row }) => row.original.email || "—" },
-    { id: "phone", accessorKey: "phone", header: "SĐT", cell: ({ row }) => row.original.phone || "—" },
-    { id: "role", header: "Vai trò", cell: ({ row }) => row.original.roleName || "—" },
-    { id: "isActive", header: "Trạng thái", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
-    { id: "createdAt", header: "Ngày tạo", cell: ({ row }) => formatDateTime(row.original.createdAt) },
+    { id: "phone", accessorKey: "phone", header: "Phone", cell: ({ row }) => row.original.phone || "—" },
+    { id: "role", header: "Role", cell: ({ row }) => row.original.roleName || "—" },
+    { id: "isActive", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
+    { id: "createdAt", header: "Created", cell: ({ row }) => formatDateTime(row.original.createdAt) },
     { id: "actions", header: "", cell: ({ row }) => (
       <div className="flex justify-end gap-1">
         <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)}><Edit className="size-4" /></Button>
@@ -117,44 +117,44 @@ export default function EmployeeAllPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Nhân viên</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Employees</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <DataTable columns={columns} data={data} searchKey="fullName" searchPlaceholder="Tìm nhân viên..." loading={loading}
-          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Thêm nhân viên</Button>} />
+        <DataTable columns={columns} data={data} searchKey="fullName" searchPlaceholder="Search employees..." loading={loading}
+          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Add Employee</Button>} />
       </div>
-      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Sửa nhân viên" : "Thêm nhân viên"} onSubmit={handleSubmit} submitting={submitting}>
+      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Edit Employee" : "Add Employee"} onSubmit={handleSubmit} submitting={submitting}>
         <div className="space-y-4">
           <ImageUpload value={formImage} onChange={setFormImage} onUpload={handleUpload} />
           <div className="space-y-2">
-            <Label htmlFor="name">Họ tên</Label>
-            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Nguyễn Văn A" />
+            <Label htmlFor="name">Full Name</Label>
+            <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="John Doe" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} placeholder="a@example.com" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">Số điện thoại</Label>
+            <Label htmlFor="phone">Phone Number</Label>
             <Input id="phone" value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="0123456789" />
           </div>
           {!editing && (
             <div className="space-y-2">
-              <Label htmlFor="password">Mật khẩu</Label>
-              <Input id="password" type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="Để trống = 123456" />
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="Leave blank = 123456" />
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="roleId">Vai trò</Label>
+            <Label htmlFor="roleId">Role</Label>
             <NativeSelect id="roleId" value={formRoleId} onChange={(e) => setFormRoleId(e.target.value)}>
-              <NativeSelectOption value="">Chọn vai trò</NativeSelectOption>
+              <NativeSelectOption value="">Select role</NativeSelectOption>
               {roles.map((r) => <NativeSelectOption key={r.id} value={r.id}>{r.name}</NativeSelectOption>)}
             </NativeSelect>
           </div>
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={formIsActive} onCheckedChange={setFormIsActive} />
-            <Label htmlFor="isActive">Hoạt động</Label>
+            <Label htmlFor="isActive">Active</Label>
           </div>
         </div>
       </CrudSheet>

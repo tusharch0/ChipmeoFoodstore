@@ -35,7 +35,7 @@ export function CrudSheet({
   children,
   onSubmit,
   submitting,
-  submitLabel = "Lưu",
+  submitLabel = "Save",
   trigger,
   triggerLabel,
 }: CrudSheetProps) {
@@ -59,7 +59,7 @@ export function CrudSheet({
         {onSubmit && (
           <SheetFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Hủy
+              Cancel
             </Button>
             <Button onClick={onSubmit} disabled={submitting}>
               {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}

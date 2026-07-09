@@ -34,7 +34,7 @@ export default function TagsPage() {
   const loadData = React.useCallback(async () => {
     setLoading(true)
     try { const res = await blogTagService.getAll(); setData(res) }
-    catch { toast.error("Không thể tải thẻ") }
+    catch { toast.error("Failed to load tags") }
     finally { setLoading(false) }
   }, [])
 
@@ -45,11 +45,11 @@ export default function TagsPage() {
   const openEdit = (item: TagDto) => { setEditing(item); setFormName(item.name); setFormColor(item.color); setSheetOpen(true) }
 
   const handleSubmit = async () => {
-    if (!formName.trim()) { toast.error("Vui lòng nhập tên thẻ"); return }
+    if (!formName.trim()) { toast.error("Please enter a tag name"); return }
     setSubmitting(true)
     try {
-      if (editing) { await blogTagService.update(editing.id, { name: formName.trim(), color: formColor }); toast.success("Cập nhật thẻ thành công") }
-      else { await blogTagService.create({ name: formName.trim(), color: formColor }); toast.success("Thêm thẻ thành công") }
+      if (editing) { await blogTagService.update(editing.id, { name: formName.trim(), color: formColor }); toast.success("Tag updated successfully") }
+      else { await blogTagService.create({ name: formName.trim(), color: formColor }); toast.success("Tag added successfully") }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
     finally { setSubmitting(false) }
@@ -58,19 +58,19 @@ export default function TagsPage() {
   const confirmDelete = (item: TagDto) => { setDeleteTarget(item); setDeleteOpen(true) }
   const handleDelete = async () => {
     if (!deleteTarget) return; setDeleting(true)
-    try { await blogTagService.delete(deleteTarget.id); toast.success("Xóa thẻ thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa thẻ") }
+    try { await blogTagService.delete(deleteTarget.id); toast.success("Tag deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete tag") }
     finally { setDeleting(false) }
   }
 
   const columns: ColumnDef<TagDto>[] = [
     {
-      accessorKey: "name", header: "Tên thẻ",
+      accessorKey: "name", header: "Tag Name",
       cell: ({ row }) => <div className="flex items-center gap-2"><div className="size-3 rounded-full" style={{ backgroundColor: row.original.color }} />{row.original.name}</div>,
     },
     { accessorKey: "slug", header: "Slug" },
-    { accessorKey: "postCount", header: "Số bài viết" },
-    { accessorKey: "createdAt", header: "Ngày tạo", cell: ({ row }) => formatDateTime(row.original.createdAt) },
+    { accessorKey: "postCount", header: "Posts" },
+    { accessorKey: "createdAt", header: "Created", cell: ({ row }) => formatDateTime(row.original.createdAt) },
     {
       id: "actions",
       cell: ({ row }) => (
@@ -87,19 +87,19 @@ export default function TagsPage() {
       <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" /><Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Thẻ</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Tags</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Quản lý thẻ</h1>
-          <Button onClick={openCreate} className="gap-1.5"><Plus className="size-4" />Thêm thẻ</Button>
+          <h1 className="text-lg font-semibold">Manage Tags</h1>
+          <Button onClick={openCreate} className="gap-1.5"><Plus className="size-4" />Add Tag</Button>
         </div>
         <DataTable columns={columns} data={data} loading={loading} />
-        <CrudSheet open={sheetOpen} onOpenChange={(v) => { setSheetOpen(v); if (!v) resetForm() }} title={editing ? "Sửa thẻ" : "Thêm thẻ"} onSubmit={handleSubmit} submitting={submitting} submitLabel={editing ? "Cập nhật" : "Tạo"}>
+        <CrudSheet open={sheetOpen} onOpenChange={(v) => { setSheetOpen(v); if (!v) resetForm() }} title={editing ? "Edit Tag" : "Add Tag"} onSubmit={handleSubmit} submitting={submitting} submitLabel={editing ? "Update" : "Create"}>
           <div className="grid gap-4">
-            <div className="grid gap-2"><Label>Tên thẻ *</Label><Input value={formName} onChange={(e) => setFormName(e.target.value)} /></div>
-            <div className="grid gap-2"><Label>Màu sắc</Label><input type="color" value={formColor} onChange={(e) => setFormColor(e.target.value)} className="h-10 w-full rounded-md border p-1" /></div>
+            <div className="grid gap-2"><Label>Tag Name *</Label><Input value={formName} onChange={(e) => setFormName(e.target.value)} /></div>
+            <div className="grid gap-2"><Label>Color</Label><input type="color" value={formColor} onChange={(e) => setFormColor(e.target.value)} className="h-10 w-full rounded-md border p-1" /></div>
           </div>
         </CrudSheet>
         <DeleteConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} onConfirm={handleDelete} loading={deleting} itemName={deleteTarget?.name} />

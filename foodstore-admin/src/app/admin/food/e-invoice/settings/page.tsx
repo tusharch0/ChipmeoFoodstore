@@ -37,7 +37,7 @@ export default function EInvoiceSettingsPage() {
         setDefaultTemplateCode(settingsData.defaultTemplateCode ?? "")
         setDefaultSerialNumber(settingsData.defaultSerialNumber ?? "")
       }
-    }).catch(() => toast.error("Không thể tải cài đặt"))
+    }).catch(() => toast.error("Failed to load settings"))
     .finally(() => setLoading(false))
   }, [])
 
@@ -51,7 +51,7 @@ export default function EInvoiceSettingsPage() {
         defaultSerialNumber: defaultSerialNumber.trim() || undefined,
       }
       await eInvoiceService.updateSettings(data)
-      toast.success("Lưu cài đặt thành công")
+      toast.success("Settings saved successfully")
     } catch (e) { toast.error((e as Error).message) }
     finally { setSaving(false) }
   }
@@ -68,34 +68,34 @@ export default function EInvoiceSettingsPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Cài đặt HĐĐT</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>E-Invoice Settings</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0 max-w-xl">
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="provider">Nhà cung cấp mặc định</Label>
+            <Label htmlFor="provider">Default Provider</Label>
             <select id="provider" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={defaultProviderId} onChange={(e) => setDefaultProviderId(e.target.value)}>
-              <option value="">Chọn nhà cung cấp...</option>
+              <option value="">Select provider...</option>
               {providers.filter(p => p.isActive).map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="templateCode">Mẫu hóa đơn (Template Code)</Label>
-            <Input id="templateCode" value={defaultTemplateCode} onChange={(e) => setDefaultTemplateCode(e.target.value)} placeholder="VD: 1GTKT0/001" />
+            <Label htmlFor="templateCode">Invoice Template Code</Label>
+            <Input id="templateCode" value={defaultTemplateCode} onChange={(e) => setDefaultTemplateCode(e.target.value)} placeholder="e.g. 1GTKT0/001" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="serialNumber">Ký hiệu hóa đơn (Serial)</Label>
-            <Input id="serialNumber" value={defaultSerialNumber} onChange={(e) => setDefaultSerialNumber(e.target.value)} placeholder="VD: AA/22E" />
+            <Label htmlFor="serialNumber">Invoice Serial Number</Label>
+            <Input id="serialNumber" value={defaultSerialNumber} onChange={(e) => setDefaultSerialNumber(e.target.value)} placeholder="e.g. AA/22E" />
           </div>
           <div className="flex items-center gap-2">
             <Switch id="autoIssue" checked={autoIssue} onCheckedChange={setAutoIssue} />
-            <Label htmlFor="autoIssue">Tự động phát hành hóa đơn khi thanh toán</Label>
+            <Label htmlFor="autoIssue">Automatically issue invoice upon payment</Label>
           </div>
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Đang lưu..." : "Lưu cài đặt"}</Button>
+          <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Settings"}</Button>
         </div>
       </div>
     </>

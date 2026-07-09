@@ -12,7 +12,7 @@ interface SearchInputProps extends Omit<React.ComponentProps<typeof Input>, "onC
   debounce?: number
 }
 
-export function SearchInput({ value, onChange, debounce = 300, placeholder = "Tìm kiếm...", ...props }: SearchInputProps) {
+export function SearchInput({ value, onChange, debounce = 300, placeholder = "Search...", ...props }: SearchInputProps) {
   const [localValue, setLocalValue] = React.useState(value)
 
   React.useEffect(() => {

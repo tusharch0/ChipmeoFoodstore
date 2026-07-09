@@ -71,7 +71,7 @@
 			window.location.reload();
 		} catch (err: any) {
 			console.error('[PaymentModal] Payment failed:', err);
-			alert('Lỗi thanh toán: ' + (err.message || 'Không thể kết nối server.'));
+			alert('Payment error: ' + (err.message || 'Unable to connect to server.'));
 		} finally {
 			processing = false;
 		}
@@ -106,7 +106,7 @@
 
 <Modal
 	bind:open
-	title={success ? 'Thanh toán thành công!' : `Thanh toán đơn hàng #${order?.orderCode}`}
+	title={success ? 'Payment Successful!' : `Pay Order #${order?.orderCode}`}
 	onClose={() => {
 		if (!success) open = false;
 	}}
@@ -118,8 +118,8 @@
 				<div class="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
 					<Icon name="tabler:check" class="h-10 w-10 text-green-600" />
 				</div>
-				<h3 class="mb-2 text-xl font-bold text-gray-900">Thanh toán hoàn tất!</h3>
-				<p class="text-gray-500">Đang đóng cửa sổ...</p>
+				<h3 class="mb-2 text-xl font-bold text-gray-900">Payment Complete!</h3>
+				<p class="text-gray-500">Closing dialog...</p>
 			</div>
 		{:else}
 			<div class="space-y-4">
@@ -128,10 +128,10 @@
 					<table class="w-full text-left text-sm">
 						<thead class="border-b bg-gray-50 font-medium text-gray-700">
 							<tr>
-								<th class="p-2">Tên món</th>
-								<th class="p-2 text-center">SL</th>
-								<th class="p-2 text-right">Đơn giá</th>
-								<th class="p-2 text-right">Thành tiền</th>
+								<th class="p-2">Item</th>
+								<th class="p-2 text-center">Qty</th>
+								<th class="p-2 text-right">Unit Price</th>
+								<th class="p-2 text-right">Total</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-100">
@@ -153,12 +153,12 @@
 						</tbody>
 						<tfoot class="bg-gray-50 font-medium">
 							<tr>
-								<td colspan="3" class="p-2 text-right">Tạm tính:</td>
+								<td colspan="3" class="p-2 text-right">Subtotal:</td>
 								<td class="p-2 text-right">{formatCurrency(order.subtotalAmount)}</td>
 							</tr>
 							{#if order.discountAmount > 0}
 								<tr class="text-green-600">
-									<td colspan="3" class="p-2 text-right">Giảm giá:</td>
+									<td colspan="3" class="p-2 text-right">Discount:</td>
 									<td class="p-2 text-right">-{formatCurrency(order.discountAmount)}</td>
 								</tr>
 							{/if}
@@ -169,7 +169,7 @@
 								</tr>
 							{/if}
 							<tr class="text-base font-bold text-indigo-600">
-								<td colspan="3" class="p-2 text-right">Tổng cộng:</td>
+								<td colspan="3" class="p-2 text-right">Total:</td>
 								<td class="p-2 text-right">{formatCurrency(order.totalAmount)}</td>
 							</tr>
 						</tfoot>
@@ -179,7 +179,7 @@
 				<!-- Order History -->
 				{#if order.history && order.history.length > 0}
 					<div class="mb-6">
-						<h4 class="mb-2 text-sm font-medium text-gray-900">Lịch sử đơn hàng</h4>
+						<h4 class="mb-2 text-sm font-medium text-gray-900">Order History</h4>
 						<div
 							class="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3"
 						>
@@ -189,13 +189,13 @@
 									<div class="flex-1">
 										<span class="font-medium text-gray-800">
 											{event.toStatus === 'pending'
-												? 'Tạo đơn'
+												? 'Order created'
 												: event.toStatus === 'paid'
-													? 'Thanh toán'
+													? 'Paid'
 													: event.toStatus === 'preparing'
-														? 'Đang chuẩn bị'
+														? 'Preparing'
 														: event.toStatus === 'served'
-															? 'Đã phục vụ'
+															? 'Served'
 															: event.toStatus}
 										</span>
 										{#if event.note}
@@ -218,7 +218,7 @@
 							: 'text-gray-500 hover:text-gray-700'}"
 						onclick={() => (paymentMethod = 'cash')}
 					>
-						💵 Tiền mặt
+						💵 Cash
 					</button>
 					<button
 						class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all {paymentMethod ===
@@ -251,7 +251,7 @@
 				</div>
 
 				<div class="py-2 text-center">
-					<div class="mb-1 text-sm text-gray-500">Tổng tiền thanh toán</div>
+					<div class="mb-1 text-sm text-gray-500">Total to pay</div>
 					<div class="text-3xl font-bold text-indigo-600">{formatCurrency(order.totalAmount)}</div>
 				</div>
 
@@ -259,7 +259,7 @@
 					<div class="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
 						<div>
 							<label for="cashReceived" class="mb-1 block text-sm font-medium text-gray-700"
-								>Khách đưa</label
+								>Amount received</label
 							>
 							<div class="relative mb-4">
 								<input
@@ -270,7 +270,7 @@
 									class="w-full rounded-lg border border-gray-300 bg-white py-3 pr-12 pl-4 text-right text-2xl font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500"
 								/>
 								<span class="absolute top-1/2 right-4 -translate-y-1/2 font-medium text-gray-500"
-									>đ</span
+									>₫</span
 								>
 							</div>
 
@@ -359,7 +359,7 @@
 								<button
 									onclick={setExactAmount}
 									class="row-span-2 flex items-center justify-center rounded-lg border border-indigo-100 bg-indigo-50 p-4 font-bold text-indigo-700 hover:bg-indigo-100"
-									>Nhận đủ</button
+									>Exact amount</button
 								>
 
 								<button
@@ -376,7 +376,7 @@
 						</div>
 
 						<div class="flex items-center justify-between border-t border-gray-200 pt-2">
-							<span class="font-medium text-gray-600">Trả lại:</span>
+							<span class="font-medium text-gray-600">Change:</span>
 							<span
 								class="text-xl font-bold {cashReceived >= order.totalAmount
 									? 'text-green-600'
@@ -388,7 +388,7 @@
 
 						{#if cashReceived < order.totalAmount}
 							<div class="text-center text-sm text-red-500">
-								Khách đưa thiếu {formatCurrency(order.totalAmount - cashReceived)}
+								Insufficient amount: {formatCurrency(order.totalAmount - cashReceived)}
 							</div>
 						{/if}
 					</div>
@@ -397,10 +397,10 @@
 						class="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-gray-200 bg-gray-50"
 					>
 						<div class="mb-4 text-4xl">🚧</div>
-						<h3 class="mb-2 text-lg font-bold text-gray-900">Tính năng tích hợp sau</h3>
+						<h3 class="mb-2 text-lg font-bold text-gray-900">Integration coming soon</h3>
 						<p class="max-w-xs text-center text-gray-500">
-							Thanh toán qua {paymentMethod === 'momo' ? 'Momo' : 'ZaloPay'} đang được phát triển. Vui
-							lòng chọn phương thức khác.
+							Payment via {paymentMethod === 'momo' ? 'Momo' : 'ZaloPay'} is under development. Please
+							choose another method.
 						</p>
 					</div>
 				{:else}
@@ -413,21 +413,21 @@
 								onerror={() => console.error('[PaymentModal] QR image failed to load')}
 							/>
 							<p class="mt-2 text-center text-sm text-gray-500">
-								Quét mã QR để thanh toán<br />
+								Scan QR code to pay<br />
 								<span class="font-bold">{formatCurrency(order.totalAmount)}</span>
 							</p>
 						{:else}
 							<div class="rounded-lg border border-yellow-100 bg-yellow-50 p-8 text-center">
 								<div class="mb-2 text-4xl">⚠️</div>
-								<p class="font-medium text-yellow-800">Không có mã QR</p>
-								<p class="mt-1 text-sm text-yellow-600">Vui lòng kiểm tra cấu hình thanh toán.</p>
+								<p class="font-medium text-yellow-800">No QR code available</p>
+								<p class="mt-1 text-sm text-yellow-600">Please check payment configuration.</p>
 							</div>
 						{/if}
 					</div>
 				{/if}
 
 				<div class="mt-4 flex gap-3 border-t pt-4">
-					<Button variant="secondary" fullWidth={true} onclick={() => (open = false)}>Đóng</Button>
+					<Button variant="secondary" fullWidth={true} onclick={() => (open = false)}>Close</Button>
 					<Button
 						variant="primary"
 						fullWidth={true}
@@ -437,7 +437,7 @@
 							paymentMethod === 'momo' ||
 							paymentMethod === 'zalopay'}
 					>
-						{processing ? 'Đang xử lý...' : 'Xác nhận đã thu tiền'}
+						{processing ? 'Processing...' : 'Confirm Payment Received'}
 					</Button>
 				</div>
 			</div>

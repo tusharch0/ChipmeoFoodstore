@@ -46,7 +46,7 @@ export default function DiscountsPage() {
   const loadData = React.useCallback(async () => {
     setLoading(true)
     try { const res = await discountService.getAll(); setData(res) }
-    catch { toast.error("Không thể tải mã giảm giá") }
+    catch { toast.error("Failed to load discounts") }
     finally { setLoading(false) }
   }, [])
 
@@ -72,8 +72,8 @@ export default function DiscountsPage() {
   }
 
   const handleSubmit = async () => {
-    if (!formCode.trim() || !formName.trim()) { toast.error("Vui lòng nhập mã và tên"); return }
-    if (formValue <= 0) { toast.error("Giá trị không hợp lệ"); return }
+    if (!formCode.trim() || !formName.trim()) { toast.error("Please enter code and name"); return }
+    if (formValue <= 0) { toast.error("Invalid value"); return }
     setSubmitting(true)
     try {
       const base = {
@@ -83,8 +83,8 @@ export default function DiscountsPage() {
         startDate: formStartDate ? new Date(formStartDate).toISOString() : null,
         endDate: formEndDate ? new Date(formEndDate).toISOString() : null, isActive: formIsActive,
       }
-      if (editing) { await discountService.update(editing.id, base as DiscountUpdateDto); toast.success("Cập nhật mã giảm giá thành công") }
-      else { await discountService.create(base as DiscountCreateDto); toast.success("Thêm mã giảm giá thành công") }
+      if (editing) { await discountService.update(editing.id, base as DiscountUpdateDto); toast.success("Discount updated successfully") }
+      else { await discountService.create(base as DiscountCreateDto); toast.success("Discount added successfully") }
       setSheetOpen(false); loadData()
     } catch (e) { toast.error((e as Error).message) }
     finally { setSubmitting(false) }
@@ -94,20 +94,20 @@ export default function DiscountsPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return
     setDeleting(true)
-    try { await discountService.delete(deleteTarget.id); toast.success("Xóa mã giảm giá thành công"); setDeleteOpen(false); loadData() }
-    catch { toast.error("Không thể xóa mã giảm giá") }
+    try { await discountService.delete(deleteTarget.id); toast.success("Discount deleted successfully"); setDeleteOpen(false); loadData() }
+    catch { toast.error("Failed to delete discount") }
     finally { setDeleting(false) }
   }
 
   const columns: ColumnDef<Discount>[] = [
-    { id: "code", accessorKey: "code", header: "Mã" },
-    { id: "name", accessorKey: "name", header: "Tên" },
-    { id: "type", header: "Loại", cell: ({ row }) => row.original.type === "percent" ? "%" : "VNĐ" },
-    { id: "value", header: "Giá trị", cell: ({ row }) => row.original.type === "percent" ? `${row.original.value}%` : formatCurrency(row.original.value) },
-    { id: "usage", header: "Đã dùng", cell: ({ row }) => `${row.original.usedCount ?? 0}/${row.original.usageLimit ?? "∞"}` },
-    { id: "startDate", header: "Từ", cell: ({ row }) => row.original.startDate ? formatDateTime(row.original.startDate) : "—" },
-    { id: "endDate", header: "Đến", cell: ({ row }) => row.original.endDate ? formatDateTime(row.original.endDate) : "—" },
-    { id: "isActive", header: "Trạng thái", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
+    { id: "code", accessorKey: "code", header: "Code" },
+    { id: "name", accessorKey: "name", header: "Name" },
+    { id: "type", header: "Type", cell: ({ row }) => row.original.type === "percent" ? "%" : "VND" },
+    { id: "value", header: "Value", cell: ({ row }) => row.original.type === "percent" ? `${row.original.value}%` : formatCurrency(row.original.value) },
+    { id: "usage", header: "Used", cell: ({ row }) => `${row.original.usedCount ?? 0}/${row.original.usageLimit ?? "∞"}` },
+    { id: "startDate", header: "From", cell: ({ row }) => row.original.startDate ? formatDateTime(row.original.startDate) : "—" },
+    { id: "endDate", header: "To", cell: ({ row }) => row.original.endDate ? formatDateTime(row.original.endDate) : "—" },
+    { id: "isActive", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
     { id: "actions", header: "", cell: ({ row }) => (
       <div className="flex justify-end gap-1">
         <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)}><Edit className="size-4" /></Button>
@@ -122,69 +122,69 @@ export default function DiscountsPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Mã giảm giá</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Discount Codes</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Tìm mã giảm giá..." loading={loading}
-          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Thêm mã giảm giá</Button>} />
+        <DataTable columns={columns} data={data} searchKey="name" searchPlaceholder="Search discounts..." loading={loading}
+          toolbarActions={<Button className="gap-1.5" onClick={openCreate}><Plus className="size-4" />Add Discount</Button>} />
       </div>
-      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Sửa mã giảm giá" : "Thêm mã giảm giá"} onSubmit={handleSubmit} submitting={submitting}>
+      <CrudSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editing ? "Edit Discount" : "Add Discount"} onSubmit={handleSubmit} submitting={submitting}>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="code">Mã</Label>
-              <Input id="code" value={formCode} onChange={(e) => setFormCode(e.target.value)} placeholder="VD: SUMMER50" />
+              <Label htmlFor="code">Code</Label>
+              <Input id="code" value={formCode} onChange={(e) => setFormCode(e.target.value)} placeholder="e.g. SUMMER50" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Tên</Label>
-              <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="VD: Giảm mùa hè" />
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Summer Sale" />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
+            <Label htmlFor="description">Description</Label>
             <Input id="description" value={formDescription} onChange={(e) => setFormDescription(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="type">Loại</Label>
+              <Label htmlFor="type">Type</Label>
               <NativeSelect id="type" value={formType} onChange={(e) => setFormType(e.target.value as "percent" | "amount")}>
-                <option value="percent">Phần trăm (%)</option>
-                <option value="amount">Số tiền (VNĐ)</option>
+                <option value="percent">Percentage (%)</option>
+                <option value="amount">Fixed Amount (VND)</option>
               </NativeSelect>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="value">Giá trị</Label>
+              <Label htmlFor="value">Value</Label>
               <Input id="value" type="number" min={0} value={formValue} onChange={(e) => setFormValue(Number(e.target.value))} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="maxDiscount">Giảm tối đa</Label>
+              <Label htmlFor="maxDiscount">Max Discount</Label>
               <Input id="maxDiscount" type="number" min={0} value={formMaxDiscount ?? ""} onChange={(e) => setFormMaxDiscount(e.target.value ? Number(e.target.value) : null)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="minOrder">Đơn tối thiểu</Label>
+              <Label htmlFor="minOrder">Min Order</Label>
               <Input id="minOrder" type="number" min={0} value={formMinOrder ?? ""} onChange={(e) => setFormMinOrder(e.target.value ? Number(e.target.value) : null)} />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="usageLimit">Giới hạn lượt dùng</Label>
+            <Label htmlFor="usageLimit">Usage Limit</Label>
             <Input id="usageLimit" type="number" min={0} value={formUsageLimit ?? ""} onChange={(e) => setFormUsageLimit(e.target.value ? Number(e.target.value) : null)} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Ngày bắt đầu</Label>
+              <Label htmlFor="startDate">Start Date</Label>
               <Input id="startDate" type="date" value={formStartDate} onChange={(e) => setFormStartDate(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endDate">Ngày kết thúc</Label>
+              <Label htmlFor="endDate">End Date</Label>
               <Input id="endDate" type="date" value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)} />
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Switch id="isActive" checked={formIsActive} onCheckedChange={setFormIsActive} />
-            <Label htmlFor="isActive">Hoạt động</Label>
+            <Label htmlFor="isActive">Active</Label>
           </div>
         </div>
       </CrudSheet>

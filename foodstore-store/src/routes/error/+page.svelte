@@ -11,14 +11,14 @@
 			⚠️
 		</div>
 
-		<h1 class="text-3xl font-bold text-gray-900">Có lỗi xảy ra</h1>
+		<h1 class="text-3xl font-bold text-gray-900">An error occurred</h1>
 
 		<p class="text-gray-600">
-			Rất tiếc, đã có lỗi xảy ra trong quá trình xử lý hoặc bạn không có quyền truy cập trang này.
+			Sorry, an error occurred during processing or you do not have permission to access this page.
 		</p>
 
 		<div class="pt-4">
-			<Button variant="primary" onclick={async () => await goto('/')}>Về trang chủ</Button>
+			<Button variant="primary" onclick={async () => await goto('/')}>Go Home</Button>
 		</div>
 	</div>
 </div>

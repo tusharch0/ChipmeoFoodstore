@@ -42,15 +42,15 @@ export const paymentSettingService = {
   },
   async getBanks(): Promise<Bank[]> {
     return [
-      { id: 1, name: "Ngân hàng TMCP Ngoại thương Việt Nam", shortName: "Vietcombank", code: "VCB", logo: "" },
-      { id: 2, name: "Ngân hàng TMCP Đầu tư và Phát triển Việt Nam", shortName: "BIDV", code: "BIDV", logo: "" },
-      { id: 3, name: "Ngân hàng TMCP Công thương Việt Nam", shortName: "VietinBank", code: "ICB", logo: "" },
-      { id: 4, name: "Ngân hàng TMCP Kỹ thương Việt Nam", shortName: "Techcombank", code: "TCB", logo: "" },
-      { id: 5, name: "Ngân hàng TMCP Á Châu", shortName: "ACB", code: "ACB", logo: "" },
-      { id: 6, name: "Ngân hàng TMCP Quân đội", shortName: "MB Bank", code: "MB", logo: "" },
-      { id: 7, name: "Ngân hàng TMCP Sài Gòn Thương Tín", shortName: "Sacombank", code: "STB", logo: "" },
-      { id: 8, name: "Ngân hàng TMCP Tiên Phong", shortName: "TPBank", code: "TPB", logo: "" },
-      { id: 9, name: "Ngân hàng số Timo", shortName: "Timo", code: "TIMO", logo: "" },
+      { id: 1, name: "Vietnam Joint Stock Commercial Bank for Foreign Trade", shortName: "Vietcombank", code: "VCB", logo: "" },
+      { id: 2, name: "Joint Stock Commercial Bank for Investment and Development of Vietnam", shortName: "BIDV", code: "BIDV", logo: "" },
+      { id: 3, name: "Vietnam Joint Stock Commercial Bank for Industry and Trade", shortName: "VietinBank", code: "ICB", logo: "" },
+      { id: 4, name: "Vietnam Technological and Commercial Joint Stock Bank", shortName: "Techcombank", code: "TCB", logo: "" },
+      { id: 5, name: "Asia Commercial Joint Stock Bank", shortName: "ACB", code: "ACB", logo: "" },
+      { id: 6, name: "Military Commercial Joint Stock Bank", shortName: "MB Bank", code: "MB", logo: "" },
+      { id: 7, name: "Saigon Thuong Tin Commercial Joint Stock Bank", shortName: "Sacombank", code: "STB", logo: "" },
+      { id: 8, name: "Tien Phong Commercial Joint Stock Bank", shortName: "TPBank", code: "TPB", logo: "" },
+      { id: 9, name: "Timo Digital Bank", shortName: "Timo", code: "TIMO", logo: "" },
     ];
   },
 };

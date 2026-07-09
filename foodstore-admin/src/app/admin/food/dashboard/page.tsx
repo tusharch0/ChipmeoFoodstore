@@ -25,7 +25,7 @@ export default function FoodDashboard() {
   const loadData = React.useCallback(() => {
     dashboardService.getStats()
       .then(setStats)
-      .catch(() => toast.error("Không thể tải dữ liệu"))
+      .catch(() => toast.error("Failed to load data"))
       .finally(() => setLoading(false))
   }, [])
 
@@ -44,7 +44,7 @@ export default function FoodDashboard() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Tổng quan</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Dashboard</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -59,42 +59,42 @@ export default function FoodDashboard() {
             <div className="grid gap-4 md:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Doanh thu hôm nay</CardTitle>
+                  <CardTitle className="text-sm font-medium">Today's Revenue</CardTitle>
                   <DollarSign className="size-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(stats.today.revenue)}</div>
-                  <p className="text-xs text-muted-foreground">{stats.today.orders} đơn hàng</p>
+                  <p className="text-xs text-muted-foreground">{stats.today.orders} orders</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Doanh thu tháng</CardTitle>
+                  <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
                   <BarChart3 className="size-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(stats.month.revenue)}</div>
-                  <p className="text-xs text-muted-foreground">{stats.month.orders} đơn hàng</p>
+                  <p className="text-xs text-muted-foreground">{stats.month.orders} orders</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Tổng doanh thu</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                   <ShoppingCart className="size-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(stats.total.revenue)}</div>
-                  <p className="text-xs text-muted-foreground">Giá trị TB: {formatCurrency(stats.averageOrderValue)}</p>
+                  <p className="text-xs text-muted-foreground">Avg Order: {formatCurrency(stats.averageOrderValue)}</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">Khách hàng</CardTitle>
+                  <CardTitle className="text-sm font-medium">Customers</CardTitle>
                   <Users className="size-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stats.totalCustomers}</div>
-                  <p className="text-xs text-muted-foreground">Giờ cao điểm: {stats.peakHour}</p>
+                  <p className="text-xs text-muted-foreground">Peak Hour: {stats.peakHour}</p>
                 </CardContent>
               </Card>
             </div>
@@ -104,7 +104,7 @@ export default function FoodDashboard() {
                 <Card>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle>Doanh thu 7 ngày qua</CardTitle>
+                      <CardTitle>Revenue - Last 7 Days</CardTitle>
                       <div className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">AI Predicted</div>
                     </div>
                   </CardHeader>
@@ -118,9 +118,9 @@ export default function FoodDashboard() {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                        <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={(v) => new Date(v).toLocaleDateString("vi-VN", { weekday: "short", day: "numeric" })} />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={(v) => new Date(v).toLocaleDateString("en-US", { weekday: "short", day: "numeric" })} />
                         <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                        <Tooltip formatter={(v) => formatCurrency(Number(v))} labelFormatter={(l) => new Date(l).toLocaleDateString("vi-VN")} />
+                        <Tooltip formatter={(v) => formatCurrency(Number(v))} labelFormatter={(l) => new Date(l).toLocaleDateString("en-US")} />
                         <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#revenueGradient)" />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -130,11 +130,11 @@ export default function FoodDashboard() {
 
               <div className="space-y-4">
                 <Card>
-                  <CardHeader className="pb-2"><CardTitle className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Thanh toán</CardTitle></CardHeader>
+                  <CardHeader className="pb-2"><CardTitle className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Payments</CardTitle></CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={130}>
                       <PieChart>
-                        <Pie data={Object.entries(stats.paymentMethodBreakdown).map(([k, v]) => ({ name: k === "cash" ? "Tiền mặt" : k === "bank" ? "Chuyển khoản" : k, value: v }))} cx="50%" cy="50%" innerRadius={35} outerRadius={55} dataKey="value" label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}>
+                        <Pie data={Object.entries(stats.paymentMethodBreakdown).map(([k, v]) => ({ name: k === "cash" ? "Cash" : k === "bank" ? "Bank Transfer" : k, value: v }))} cx="50%" cy="50%" innerRadius={35} outerRadius={55} dataKey="value" label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}>
                           {Object.entries(stats.paymentMethodBreakdown).map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} />))}
                         </Pie>
                         <Tooltip />
@@ -144,7 +144,7 @@ export default function FoodDashboard() {
                 </Card>
                 {stats.serviceTypeStats.length > 0 && (
                   <Card>
-                    <CardHeader className="pb-2"><CardTitle className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Nguồn đơn</CardTitle></CardHeader>
+                    <CardHeader className="pb-2"><CardTitle className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Order Sources</CardTitle></CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={130}>
                         <PieChart>
@@ -162,7 +162,7 @@ export default function FoodDashboard() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
-                <CardHeader><CardTitle>Món bán chạy</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Top Selling Items</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {stats.popularItems.slice(0, 8).map((item, i) => (
@@ -171,7 +171,7 @@ export default function FoodDashboard() {
                         <div className="flex-1 min-w-0">
                           <p className="truncate text-sm font-medium">{item.name}</p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{item.quantity} đã bán</span>
+                            <span>{item.quantity} sold</span>
                             <span>•</span>
                             <span>{formatCurrency(item.revenue)}</span>
                           </div>
@@ -185,7 +185,7 @@ export default function FoodDashboard() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader><CardTitle>Combo bán chạy</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Popular Combos</CardTitle></CardHeader>
                 <CardContent>
                   {stats.popularCombos.length > 0 ? (
                     <div className="space-y-3">
@@ -195,7 +195,7 @@ export default function FoodDashboard() {
                           <div className="flex-1">
                             <p className="text-sm font-medium">{item.name}</p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              <span>{item.quantity} đã bán</span>
+                              <span>{item.quantity} sold</span>
                               <span>•</span>
                               <span>{formatCurrency(item.revenue)}</span>
                             </div>
@@ -207,14 +207,14 @@ export default function FoodDashboard() {
                       ))}
                     </div>
                   ) : (
-                    <p className="py-8 text-center text-muted-foreground">Chưa có dữ liệu combo</p>
+                    <p className="py-8 text-center text-muted-foreground">No combo data yet</p>
                   )}
                 </CardContent>
               </Card>
             </div>
           </>
         ) : (
-          <div className="flex h-64 items-center justify-center text-muted-foreground">Không có dữ liệu</div>
+          <div className="flex h-64 items-center justify-center text-muted-foreground">No data</div>
         )}
       </div>
     </>

@@ -18,7 +18,7 @@ export default function EInvoiceDashboardPage() {
   React.useEffect(() => {
     eInvoiceService.getDashboard()
       .then(setData)
-      .catch(() => toast.error("Không thể tải thống kê HĐĐT"))
+      .catch(() => toast.error("Failed to load e-invoice stats"))
       .finally(() => setLoading(false))
   }, [])
 
@@ -29,12 +29,12 @@ export default function EInvoiceDashboardPage() {
   )
 
   const cards = [
-    { title: "Tổng hóa đơn", value: data?.totalInvoices ?? 0, icon: FileText, color: "text-blue-600" },
-    { title: "Đã phát hành", value: data?.issuedInvoices ?? 0, icon: FileCheck, color: "text-green-600" },
-    { title: "Nháp", value: data?.draftInvoices ?? 0, icon: FileText, color: "text-yellow-600" },
-    { title: "Thất bại", value: data?.failedInvoices ?? 0, icon: XCircle, color: "text-red-600" },
-    { title: "Đã hủy", value: data?.cancelledInvoices ?? 0, icon: Ban, color: "text-gray-600" },
-    { title: "Nhà cung cấp", value: data?.activeProviders ?? 0, icon: Building2, color: "text-purple-600" },
+    { title: "Total Invoices", value: data?.totalInvoices ?? 0, icon: FileText, color: "text-blue-600" },
+    { title: "Issued", value: data?.issuedInvoices ?? 0, icon: FileCheck, color: "text-green-600" },
+    { title: "Draft", value: data?.draftInvoices ?? 0, icon: FileText, color: "text-yellow-600" },
+    { title: "Failed", value: data?.failedInvoices ?? 0, icon: XCircle, color: "text-red-600" },
+    { title: "Cancelled", value: data?.cancelledInvoices ?? 0, icon: Ban, color: "text-gray-600" },
+    { title: "Providers", value: data?.activeProviders ?? 0, icon: Building2, color: "text-purple-600" },
   ]
 
   return (
@@ -43,7 +43,7 @@ export default function EInvoiceDashboardPage() {
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
-          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>Hóa đơn điện tử</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+          <Breadcrumb><BreadcrumbList><BreadcrumbItem><BreadcrumbPage>E-Invoice</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

@@ -38,32 +38,32 @@ type Module = "food" | "employees" | "crm" | "cms"
 
 const teams: { name: string; logo: React.ReactNode; plan: string }[] = [
   {
-    name: "Quản lý quán ăn",
+    name: "Restaurant Management",
     logo: <GalleryVerticalEndIcon />,
-    plan: "Thực đơn & Đơn hàng",
+    plan: "Menu & Orders",
   },
   {
-    name: "Quản lý nhân viên",
+    name: "Employee Management",
     logo: <UserCogIcon />,
-    plan: "Nhân sự & Phân quyền",
+    plan: "Staff & Permissions",
   },
   {
-    name: "Quản lý khách hàng",
+    name: "Customer Management",
     logo: <UsersIcon />,
     plan: "CRM & POS",
   },
   {
-    name: "Quản lý bài viết",
+    name: "Content Management",
     logo: <FileTextIcon />,
-    plan: "Nội dung & Tin tức",
+    plan: "Content & News",
   },
 ]
 
 const currentModuleName: Record<Module, string> = {
-  food: "Quản lý quán ăn",
-  employees: "Quản lý nhân viên",
-  crm: "Quản lý khách hàng",
-  cms: "Quản lý bài viết",
+  food: "Restaurant Management",
+  employees: "Employee Management",
+  crm: "Customer Management",
+  cms: "Content Management",
 }
 
 const foodNav: {
@@ -71,98 +71,98 @@ const foodNav: {
   items?: { title: string; url: string }[]
 }[] = [
   {
-    title: "Tổng quan",
+    title: "Overview",
     icon: <LayoutDashboardIcon />,
     isActive: true,
     items: [
-      { title: "Tổng quan", url: "/admin/food/dashboard" },
-      { title: "Thống kê & AI", url: "/admin/food/analytics" },
+      { title: "Dashboard", url: "/admin/food/dashboard" },
+      { title: "Analytics & AI", url: "/admin/food/analytics" },
     ],
   },
   {
-    title: "Đơn hàng",
+    title: "Orders",
     icon: <ShoppingCartIcon />,
     items: [
-      { title: "Tất cả đơn hàng", url: "/admin/food/orders" },
-      { title: "Chờ xử lý", url: "/admin/food/orders?status=pending" },
+      { title: "All Orders", url: "/admin/food/orders" },
+      { title: "Pending", url: "/admin/food/orders?status=pending" },
     ],
   },
   {
-    title: "Sản phẩm",
+    title: "Products",
     icon: <PackageIcon />,
     items: [
-      { title: "Tất cả sản phẩm", url: "/admin/food/products" },
-      { title: "Danh mục", url: "/admin/food/categories" },
-      { title: "Topping", url: "/admin/food/toppings" },
-      { title: "Combo", url: "/admin/food/combos" },
+      { title: "All Products", url: "/admin/food/products" },
+      { title: "Categories", url: "/admin/food/categories" },
+      { title: "Toppings", url: "/admin/food/toppings" },
+      { title: "Combos", url: "/admin/food/combos" },
     ],
   },
   {
-    title: "Nhà cung cấp",
+    title: "Suppliers",
     url: "/admin/food/suppliers",
     icon: <TruckIcon />,
   },
   {
-    title: "Nguồn đơn",
+    title: "Order Sources",
     url: "/admin/food/sources",
     icon: <RadioIcon />,
   },
   {
-    title: "Khuyến mãi",
+    title: "Promotions",
     icon: <PercentIcon />,
     items: [
-      { title: "Mã giảm giá", url: "/admin/food/discounts" },
+      { title: "Discount Codes", url: "/admin/food/discounts" },
     ],
   },
   {
-    title: "Thanh toán",
+    title: "Payment",
     url: "/admin/food/payment-settings",
     icon: <ClipboardListIcon />,
   },
   {
-    title: "Hóa đơn điện tử",
+    title: "E-Invoice",
     icon: <ReceiptTextIcon />,
     items: [
-      { title: "Tổng quan", url: "/admin/food/e-invoice/dashboard" },
-      { title: "Giao dịch", url: "/admin/food/e-invoice/transactions" },
-      { title: "Nhà cung cấp", url: "/admin/food/e-invoice/providers" },
-      { title: "Cài đặt", url: "/admin/food/e-invoice/settings" },
+      { title: "Dashboard", url: "/admin/food/e-invoice/dashboard" },
+      { title: "Transactions", url: "/admin/food/e-invoice/transactions" },
+      { title: "Providers", url: "/admin/food/e-invoice/providers" },
+      { title: "Settings", url: "/admin/food/e-invoice/settings" },
     ],
   },
 ]
 
 const employeeNav = [
   {
-    title: "Tổng quan",
+    title: "Overview",
     url: "/admin/employees/dashboard",
     icon: <LayoutDashboardIcon />,
     isActive: true,
   },
   {
-    title: "Nhân viên",
+    title: "Employees",
     icon: <UserCogIcon />,
     items: [
-      { title: "Tất cả nhân viên", url: "/admin/employees/all" },
-      { title: "Vai trò", url: "/admin/employees/roles" },
-      { title: "Phân quyền", url: "/admin/employees/role-permissions" },
+      { title: "All Employees", url: "/admin/employees/all" },
+      { title: "Roles", url: "/admin/employees/roles" },
+      { title: "Permissions", url: "/admin/employees/role-permissions" },
     ],
   },
 ]
 
 const crmNav = [
   {
-    title: "Tổng quan",
+    title: "Overview",
     url: "/admin/crm/dashboard",
     icon: <LayoutDashboardIcon />,
     isActive: true,
   },
   {
-    title: "Khách hàng",
+    title: "Customers",
     url: "/admin/crm/customers",
     icon: <UsersIcon />,
   },
   {
-    title: "Bảng xếp hạng điểm",
+    title: "Points Leaderboard",
     url: "/admin/crm/leaderboard",
     icon: <Trophy />,
   },
@@ -170,28 +170,28 @@ const crmNav = [
 
 const cmsNav = [
   {
-    title: "Tổng quan",
+    title: "Overview",
     url: "/admin/cms/dashboard",
     icon: <LayoutDashboardIcon />,
     isActive: true,
   },
   {
-    title: "Bài viết",
+    title: "Posts",
     url: "/admin/cms/posts",
     icon: <FileTextIcon />,
   },
   {
-    title: "Thẻ",
+    title: "Tags",
     url: "/admin/cms/tags",
     icon: <TagsIcon />,
   },
   {
-    title: "Danh mục",
+    title: "Categories",
     url: "/admin/cms/categories",
     icon: <BookOpenIcon />,
   },
   {
-    title: "Cài đặt",
+    title: "Settings",
     url: "/admin/cms/settings",
     icon: <Settings2Icon />,
   },
@@ -222,10 +222,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   function handleTeamChange(team: { name: string; logo: React.ReactNode; plan: string }) {
     const routeMap: Record<string, Module> = {
-      "Quản lý quán ăn": "food",
-      "Quản lý nhân viên": "employees",
-      "Quản lý khách hàng": "crm",
-      "Quản lý bài viết": "cms",
+      "Restaurant Management": "food",
+      "Employee Management": "employees",
+      "Customer Management": "crm",
+      "Content Management": "cms",
     }
     router.push(`/admin/${routeMap[team.name] ?? "food"}`)
   }
