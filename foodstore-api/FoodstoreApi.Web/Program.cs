@@ -153,6 +153,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
+                var hubToken = context.Request.Query["access_token"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(hubToken) && context.HttpContext.Request.Path.StartsWithSegments("/hubs/app"))
+                {
+                    context.Token = hubToken;
+                    return Task.CompletedTask;
+                }
                 var token = context.Request.Cookies["auth_token"];
                 if (!string.IsNullOrEmpty(token))
                     context.Token = token;
@@ -200,12 +206,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
-// Auto-migrate and seed
-using (var scope = app.Services.CreateScope())
+// Local development may auto-migrate; staged environments run migrations as a distinct deployment step.
+if (builder.Configuration.GetValue("Database:AutoMigrate", app.Environment.IsDevelopment()))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<StoreDbContext>();
     await db.Database.ExecuteSqlRawAsync("CREATE COLLATION IF NOT EXISTS vi_ci_ai (LOCALE = 'vi-VN-x-icu', PROVIDER = 'icu');");
     await db.Database.MigrateAsync();
@@ -225,6 +233,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("CorsPolicy");
 app.UseRateLimiter();
 app.UseAuthentication();
+app.UseMiddleware<TenantBranchSelectionMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

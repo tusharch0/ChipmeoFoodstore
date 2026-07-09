@@ -9,6 +9,7 @@ public class CreateEmployeeDto
     public string? Phone { get; set; }
     public string? AvatarUrl { get; set; }
     public Guid RoleId { get; set; }
+    public Guid? BranchId { get; set; }
     public bool IsActive { get; set; } = true;
 }
 
@@ -19,6 +20,7 @@ public class UpdateEmployeeDto
     public string? Phone { get; set; }
     public string? AvatarUrl { get; set; }
     public Guid RoleId { get; set; }
+    public Guid? BranchId { get; set; }
     public bool IsActive { get; set; }
     public string? Password { get; set; } // Optional for update
 }

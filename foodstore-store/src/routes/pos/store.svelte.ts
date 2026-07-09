@@ -34,7 +34,7 @@ class POSStore {
 	pendingOrders = $state<Order[]>([]);
 	loadingOrders = $state(false);
 	selectedOrder = $state<Order | null>(null);
-	editingOrder = $state<{ id: number; code: string } | null>(null);
+	editingOrder = $state<{ id: string; code: string } | null>(null);
 
 	// Data State (Synced from Stores)
 	localMenuItems = $state<MenuItem[]>([]);
@@ -227,7 +227,7 @@ class POSStore {
 		this.showPaymentModal = true;
 	}
 
-	async cancelOrder(orderId: number) {
+	async cancelOrder(orderId: string) {
 		if (!confirm('Are you sure you want to cancel this order?')) return;
 
 		try {

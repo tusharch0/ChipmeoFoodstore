@@ -57,18 +57,18 @@ export const API_ENDPOINTS = {
 	orders: {
 		list: `${API_BASE_URL}/api/admin/orders`,
 		create: `${API_BASE_URL}/api/pos/orders`,
-		detail: (id: number) => `${API_BASE_URL}/api/admin/orders/${id}`,
-		update: (id: number) => `${API_BASE_URL}/api/admin/orders/${id}`,
-		updateStatus: (id: number) => `${API_BASE_URL}/api/admin/orders/${id}/status`,
-		setUnpaid: (id: number) => `${API_BASE_URL}/api/admin/orders/${id}/set-unpaid`,
+		detail: (id: string) => `${API_BASE_URL}/api/admin/orders/${id}`,
+		update: (id: string) => `${API_BASE_URL}/api/admin/orders/${id}`,
+		updateStatus: (id: string) => `${API_BASE_URL}/api/admin/orders/${id}/status`,
+		setUnpaid: (id: string) => `${API_BASE_URL}/api/admin/orders/${id}/set-unpaid`,
 		byStatus: (status: string) => `${API_BASE_URL}/api/admin/orders/status/${status}`,
-		payment: (id: number) => `${API_BASE_URL}/api/pos/orders/${id}/payment`,
+		payment: (id: string) => `${API_BASE_URL}/api/pos/orders/${id}/payment`,
 		paged: `${API_BASE_URL}/api/admin/orders/paged`,
-		delete: (id: number) => `${API_BASE_URL}/api/admin/orders/${id}`
+		delete: (id: string) => `${API_BASE_URL}/api/admin/orders/${id}`
 	},
 	posOrders: {
 		create: `${API_BASE_URL}/api/pos/orders`,
-		updateStatus: (id: number) => `${API_BASE_URL}/api/pos/orders/${id}/status`
+		updateStatus: (id: string) => `${API_BASE_URL}/api/pos/orders/${id}/status`
 	},
 	pos: {
 		menu: `${API_BASE_URL}/api/pos/menu`,
@@ -148,8 +148,8 @@ export const API_ENDPOINTS = {
 	},
 	kitchen: {
 		list: `${API_BASE_URL}/api/kitchen/orders`,
-		start: (id: number) => `${API_BASE_URL}/api/kitchen/orders/${id}/start`,
-		complete: (id: number) => `${API_BASE_URL}/api/kitchen/orders/${id}/complete`
+		start: (id: string) => `${API_BASE_URL}/api/kitchen/orders/${id}/start`,
+		complete: (id: string) => `${API_BASE_URL}/api/kitchen/orders/${id}/complete`
 	},
 	blog: `${API_BASE_URL}/api/blog`,
 	customers: `${API_BASE_URL}/api/customers`,

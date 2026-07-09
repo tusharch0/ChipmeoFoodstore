@@ -41,6 +41,7 @@ public class OrganizationsController(IOrganizationService service, ITenantAccess
     [RequirePermission("organization.manage")]
     public async Task<IActionResult> Create(CreateOrganizationRequest request, CancellationToken cancellationToken)
     {
+        if (!tenantContext.IsPlatformOperator && !tenantContext.IsSystem) return Forbid();
         try
         {
             var created = await service.CreateAsync(request, cancellationToken);
@@ -83,4 +84,29 @@ public class OrganizationsController(IOrganizationService service, ITenantAccess
             return ApiResult.BadRequest(exception.Message);
         }
     }
+
+
+    [HttpGet("{organizationId:guid}/memberships")]
+    [RequirePermission("organization.manage")]
+    public async Task<IActionResult> GetMemberships(Guid organizationId, CancellationToken cancellationToken)
+    {
+        if (!CanManageMemberships(organizationId) || !await tenantAccess.CanAccessOrganizationAsync(organizationId, cancellationToken)) return Forbid();
+        return ApiResult.Success(await service.GetMembershipsAsync(organizationId, cancellationToken));
+    }
+
+    [HttpPut("{organizationId:guid}/memberships/{membershipId:guid}")]
+    [RequirePermission("organization.manage")]
+    public async Task<IActionResult> UpdateMembership(Guid organizationId, Guid membershipId, UpdateOrganizationMembershipRequest request, CancellationToken cancellationToken)
+    {
+        if (!CanManageMemberships(organizationId) || !await tenantAccess.CanAccessOrganizationAsync(organizationId, cancellationToken)) return Forbid();
+        try
+        {
+            var membership = await service.UpdateMembershipAsync(organizationId, membershipId, request, cancellationToken);
+            return membership is null ? ApiResult.NotFound("Membership not found.") : ApiResult.Success(membership);
+        }
+        catch (InvalidOperationException exception) { return ApiResult.BadRequest(exception.Message); }
+    }
+
+    private bool CanManageMemberships(Guid organizationId) => tenantContext.IsPlatformOperator || tenantContext.IsSystem ||
+        (tenantContext.IsOrganizationOwner && tenantContext.OrganizationId == organizationId);
 }

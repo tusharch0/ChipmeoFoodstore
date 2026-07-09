@@ -34,5 +34,11 @@ jobs:
           cache-dependency-path: ${{ matrix.project }}/package-lock.json
       - working-directory: ${{ matrix.project }}
         run: npm ci
+      - if: matrix.project == 'foodstore-admin'
+        working-directory: foodstore-admin
+        run: npx tsc --noEmit
+      - if: matrix.project == 'foodstore-store'
+        working-directory: foodstore-store
+        run: npx svelte-check --tsconfig ./tsconfig.json
       - working-directory: ${{ matrix.project }}
         run: npm run build

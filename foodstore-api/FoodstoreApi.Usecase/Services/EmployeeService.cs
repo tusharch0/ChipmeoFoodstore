@@ -9,10 +9,16 @@ namespace FoodstoreApi.Usecase.Services;
 
 public class EmployeeService(
     IEmployeeRepository employeeRepository,
-    UserManager<ApplicationUser> userManager) : IEmployeeService
+    UserManager<ApplicationUser> userManager,
+    IOrganizationRepository organizationRepository,
+    ITenantAccessService tenantAccessService,
+    ITenantContext tenantContext) : IEmployeeService
 {
     private readonly IEmployeeRepository _employeeRepository = employeeRepository;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly IOrganizationRepository _organizationRepository = organizationRepository;
+    private readonly ITenantAccessService _tenantAccessService = tenantAccessService;
+    private readonly ITenantContext _tenantContext = tenantContext;
 
     public async Task<IEnumerable<EmployeeDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -28,6 +34,12 @@ public class EmployeeService(
 
     public async Task<EmployeeDto> CreateAsync(CreateEmployeeDto dto, CancellationToken cancellationToken = default)
     {
+        var branchId = dto.BranchId ?? _tenantContext.BranchId
+            ?? throw new InvalidOperationException("A branch assignment is required.");
+        if (!await _tenantAccessService.CanAccessBranchAsync(branchId, cancellationToken))
+            throw new UnauthorizedAccessException("The selected branch is outside the current organization.");
+        var branch = await _organizationRepository.GetBranchByIdAsync(branchId, cancellationToken)
+            ?? throw new InvalidOperationException("Branch was not found.");
         var normalizedUsername = UsernameHelper.Normalize(dto.Username);
         var existing = await _userManager.FindByNameAsync(normalizedUsername);
         if (existing != null)
@@ -48,13 +60,18 @@ public class EmployeeService(
         var employee = new Employee
         {
             UserId = user.Id,
+            EmployeeCode = $"EMP-{Guid.NewGuid():N}"[..12].ToUpperInvariant(),
             RoleId = dto.RoleId,
+            BranchId = branchId,
             Phone = dto.Phone,
             AvatarUrl = dto.AvatarUrl,
+            Status = dto.IsActive ? (short)1 : (short)0,
 
         };
 
         var created = await _employeeRepository.CreateAsync(employee, cancellationToken);
+        await _organizationRepository.EnsureMembershipAsync(user.Id, branch.OrganizationId, "member", cancellationToken);
+        created.Branch = branch;
         return MapToDto(created);
     }
 
@@ -68,6 +85,17 @@ public class EmployeeService(
         employee.Phone = dto.Phone;
         employee.AvatarUrl = dto.AvatarUrl;
         employee.RoleId = dto.RoleId;
+        if (dto.BranchId.HasValue && dto.BranchId != employee.BranchId)
+        {
+            if (!await _tenantAccessService.CanAccessBranchAsync(dto.BranchId.Value, cancellationToken))
+                throw new UnauthorizedAccessException("The selected branch is outside the current organization.");
+            var branch = await _organizationRepository.GetBranchByIdAsync(dto.BranchId.Value, cancellationToken)
+                ?? throw new InvalidOperationException("Branch was not found.");
+            employee.BranchId = branch.Id;
+            employee.Branch = branch;
+            await _organizationRepository.EnsureMembershipAsync(employee.UserId, branch.OrganizationId, "member", cancellationToken);
+        }
+        employee.Status = dto.IsActive ? (short)1 : (short)0;
         employee.User.Banned = !dto.IsActive;
 
         if (!string.IsNullOrWhiteSpace(dto.Password))
@@ -99,6 +127,10 @@ public class EmployeeService(
             AvatarUrl = employee.AvatarUrl,
             RoleId = employee.RoleId,
             RoleName = employee.Role?.Name ?? "",
+            BranchId = employee.BranchId,
+            BranchName = employee.Branch?.Name,
+            OrganizationId = employee.Branch?.OrganizationId,
+            OrganizationName = employee.Branch?.Organization?.Name,
             IsActive = !employee.User.Banned,
             LastLogin = employee.LastLogin,
             CreatedAt = employee.CreatedAt,

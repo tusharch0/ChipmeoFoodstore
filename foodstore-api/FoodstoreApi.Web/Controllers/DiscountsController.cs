@@ -16,11 +16,13 @@ public class DiscountsController : ControllerBase
 {
     private readonly IDiscountService _service;
     private readonly IHubContext<AppHub> _hubContext;
+    private readonly ITenantContext _tenantContext;
 
-    public DiscountsController(IDiscountService service, IHubContext<AppHub> hubContext)
+    public DiscountsController(IDiscountService service, IHubContext<AppHub> hubContext, ITenantContext tenantContext)
     {
         _service = service;
         _hubContext = hubContext;
+        _tenantContext = tenantContext;
     }
 
     [HttpGet]
@@ -45,7 +47,7 @@ public class DiscountsController : ControllerBase
     public async Task<IActionResult> Create(CreateDiscountDto dto, CancellationToken cancellationToken)
     {
         var created = await _service.CreateAsync(dto, cancellationToken);
-        await _hubContext.Clients.All.SendAsync("ReceiveDiscountUpdate", cancellationToken);
+        await BroadcastAsync(cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
@@ -55,7 +57,7 @@ public class DiscountsController : ControllerBase
     {
         var ok = await _service.UpdateAsync(id, dto, cancellationToken);
         if (!ok) return ApiResult.NotFound();
-        await _hubContext.Clients.All.SendAsync("ReceiveDiscountUpdate", cancellationToken);
+        await BroadcastAsync(cancellationToken);
         return NoContent();
     }
 
@@ -67,7 +69,7 @@ public class DiscountsController : ControllerBase
         {
             var ok = await _service.DeleteAsync(id, cancellationToken);
             if (!ok) return ApiResult.NotFound();
-            await _hubContext.Clients.All.SendAsync("ReceiveDiscountUpdate", cancellationToken);
+            await BroadcastAsync(cancellationToken);
             return NoContent();
         }
         catch (Exception)
@@ -75,6 +77,10 @@ public class DiscountsController : ControllerBase
             return ApiResult.BadRequest("Không thể xóa mã giảm giá này vì đã được sử dụng trong đơn hàng.");
         }
     }
+
+    private Task BroadcastAsync(CancellationToken cancellationToken) => _tenantContext.BranchId.HasValue
+        ? _hubContext.Clients.Group(TenantHubGroups.Branch(_tenantContext.BranchId.Value)).SendAsync("ReceiveDiscountUpdate", cancellationToken)
+        : Task.CompletedTask;
 }
 
 

@@ -29,6 +29,43 @@ public class OrganizationRepository(StoreDbContext context) : IOrganizationRepos
             e => e.UserId == userId && e.OrganizationId == organizationId && e.IsActive,
             cancellationToken);
 
+    public async Task<OrganizationMembership> EnsureMembershipAsync(Guid userId, Guid organizationId, string role, CancellationToken cancellationToken = default)
+    {
+        var membership = await context.OrganizationMemberships.SingleOrDefaultAsync(
+            e => e.UserId == userId && e.OrganizationId == organizationId, cancellationToken);
+        if (membership is null)
+        {
+            membership = new OrganizationMembership
+            {
+                Id = Guid.NewGuid(), UserId = userId, OrganizationId = organizationId,
+                Role = role, IsActive = true
+            };
+            context.OrganizationMemberships.Add(membership);
+        }
+        else
+        {
+            membership.Role = role;
+            membership.IsActive = true;
+        }
+        await context.SaveChangesAsync(cancellationToken);
+        return membership;
+    }
+
+    public async Task<IReadOnlyList<OrganizationMembership>> GetMembershipsAsync(Guid organizationId, CancellationToken cancellationToken = default) =>
+        await context.OrganizationMemberships.AsNoTracking().Include(item => item.User).ThenInclude(user => user.Employee).ThenInclude(employee => employee!.Branch)
+            .Where(item => item.OrganizationId == organizationId).OrderBy(item => item.User.Name).ToListAsync(cancellationToken);
+
+    public async Task<OrganizationMembership?> UpdateMembershipAsync(Guid organizationId, Guid membershipId, string role, bool isActive, CancellationToken cancellationToken = default)
+    {
+        var membership = await context.OrganizationMemberships.Include(item => item.User).ThenInclude(user => user.Employee).ThenInclude(employee => employee!.Branch)
+            .SingleOrDefaultAsync(item => item.Id == membershipId && item.OrganizationId == organizationId, cancellationToken);
+        if (membership is null) return null;
+        membership.Role = role;
+        membership.IsActive = isActive;
+        await context.SaveChangesAsync(cancellationToken);
+        return membership;
+    }
+
     public Task<bool> BranchBelongsToOrganizationAsync(Guid branchId, Guid organizationId, CancellationToken cancellationToken = default) =>
         context.Branches.IgnoreQueryFilters().AnyAsync(e => e.Id == branchId && e.OrganizationId == organizationId, cancellationToken);
 

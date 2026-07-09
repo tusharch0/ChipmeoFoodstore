@@ -57,3 +57,6 @@ public sealed record BranchDto(
     string? OpeningHoursJson,
     string? TaxSettingsJson,
     string? KitchenRouting);
+
+public sealed record OrganizationMembershipDto(Guid Id, Guid UserId, string Name, string? Email, string Role, bool IsActive, Guid? BranchId, string? BranchName);
+public sealed record UpdateOrganizationMembershipRequest(string Role, bool IsActive = true);

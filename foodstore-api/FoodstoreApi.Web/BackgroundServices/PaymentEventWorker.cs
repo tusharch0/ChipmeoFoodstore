@@ -1,5 +1,7 @@
 using FoodstoreApi.Usecase.Interfaces;
 using FoodstoreApi.Web.Hubs;
+using FoodstoreApi.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
 
 namespace FoodstoreApi.Web.BackgroundServices;
@@ -54,16 +56,25 @@ public class PaymentEventWorker(
     {
         using var scope = scopeFactory.CreateScope();
         var payments = scope.ServiceProvider.GetRequiredService<IPaymentService>();
+        var db = scope.ServiceProvider.GetRequiredService<StoreDbContext>();
 
         var results = await payments.PollPendingAsync(ct);
 
         foreach (var result in results.Where(r => r.Confirmed && r.OrderId.HasValue))
         {
+            var branchId = await db.Orders.AsNoTracking()
+                .Where(order => order.Id == result.OrderId!.Value)
+                .Select(order => order.BranchId)
+                .SingleOrDefaultAsync(ct);
+            if (!branchId.HasValue)
+                continue;
+
             var payload = new { Id = result.OrderId, Status = result.OrderStatus, PaymentIntentId = result.IntentId };
-            await hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", payload, ct);
-            await hubContext.Clients.All.SendAsync("ReceivePaymentUpdate", payload, ct);
+            var clients = hubContext.Clients.Group(TenantHubGroups.Branch(branchId.Value));
+            await clients.SendAsync("ReceiveOrderUpdate", payload, ct);
+            await clients.SendAsync("ReceivePaymentUpdate", payload, ct);
             // A confirmed online payment releases the order to the kitchen.
-            await hubContext.Clients.Group("Kitchen").SendAsync("ReceiveNewOrder", payload, ct);
+            await clients.SendAsync("ReceiveNewOrder", payload, ct);
         }
     }
 }

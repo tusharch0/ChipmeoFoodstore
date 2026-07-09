@@ -12,29 +12,31 @@ public class ReportService : IReportService
 {
     private readonly IReportRepository _repository;
     private readonly IDistributedCache _cache;
+    private readonly ITenantContext _tenantContext;
 
-    public ReportService(IReportRepository repository, IDistributedCache cache)
+    public ReportService(IReportRepository repository, IDistributedCache cache, ITenantContext tenantContext)
     {
         _repository = repository;
         _cache = cache;
+        _tenantContext = tenantContext;
     }
 
     public async Task<DashboardOverviewDto> GetOverviewAsync(CancellationToken cancellationToken = default)
     {
-        return await _cache.GetOrSetAsync(CacheKeys.Dashboard.Overview, () =>
+        return await _cache.GetOrSetAsync(CacheKeys.Dashboard.Overview(_tenantContext.CacheScope), () =>
             _repository.GetOverviewAsync(cancellationToken), TimeSpan.FromMinutes(3), cancellationToken);
     }
 
     public async Task<DashboardStatsDto> GetStatsAsync(DateTime fromDate, DateTime toDate, string groupBy, CancellationToken cancellationToken = default)
     {
-        var key = CacheKeys.Dashboard.Stats(fromDate.ToString("yyyyMMdd"), toDate.ToString("yyyyMMdd"), groupBy);
+        var key = CacheKeys.Dashboard.Stats(_tenantContext.CacheScope, fromDate.ToString("yyyyMMdd"), toDate.ToString("yyyyMMdd"), groupBy);
         return await _cache.GetOrSetAsync(key, () =>
             _repository.GetStatsAsync(fromDate, toDate, groupBy, cancellationToken), TimeSpan.FromMinutes(3), cancellationToken);
     }
 
     public async Task<SalesForecastDto> GetForecastAsync(int horizon = 7, CancellationToken cancellationToken = default)
     {
-        return await _cache.GetOrSetAsync(CacheKeys.Dashboard.Forecast(horizon), async () =>
+        return await _cache.GetOrSetAsync(CacheKeys.Dashboard.Forecast(_tenantContext.CacheScope, horizon), async () =>
         {
             var endDate = DateTime.UtcNow.Date;
             var startDate = endDate.AddDays(-90);
@@ -136,7 +138,7 @@ public class ReportService : IReportService
 
     public async Task<List<ComboRecommendationDto>> GetComboRecommendationsAsync(CancellationToken cancellationToken = default)
     {
-        return await _cache.GetOrSetAsync(CacheKeys.Dashboard.ComboRecommendations, async () =>
+        return await _cache.GetOrSetAsync(CacheKeys.Dashboard.ComboRecommendations(_tenantContext.CacheScope), async () =>
         {
             var cutoffDate = DateTime.UtcNow.AddDays(-30);
             var rawData = await _repository.GetComboRecommendationDataAsync(cutoffDate, cancellationToken);

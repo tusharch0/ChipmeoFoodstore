@@ -16,6 +16,7 @@ Create separate Docker/managed-service environments for development, staging, sa
 2. Take and verify a PostgreSQL backup; record its restore location and owner.
 3. Deploy to staging, wait for `/v2/api/health/ready`, and run payment/webhook duplicate-callback smoke tests.
 4. Apply migrations once, deploy application containers, then re-check readiness and critical dashboards.
+   Set `DATABASE_AUTO_MIGRATE=false` outside local development and run `dotnet ef database update --project foodstore-api/FoodstoreApi.Infrastructure --startup-project foodstore-api/FoodstoreApi.Web` as the controlled migration step.
 5. For rollback, revert the application image first. Do not roll back a database migration without an approved migration-specific recovery plan.
 
 ## Operational ownership

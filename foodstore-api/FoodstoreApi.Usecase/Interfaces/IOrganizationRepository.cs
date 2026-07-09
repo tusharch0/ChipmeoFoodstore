@@ -10,6 +10,9 @@ public interface IOrganizationRepository
     Task<bool> UserExistsAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<bool> HasActiveMembershipAsync(Guid userId, Guid organizationId, CancellationToken cancellationToken = default);
     Task<OrganizationMembership?> GetActiveMembershipAsync(Guid userId, Guid organizationId, CancellationToken cancellationToken = default);
+    Task<OrganizationMembership> EnsureMembershipAsync(Guid userId, Guid organizationId, string role, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<OrganizationMembership>> GetMembershipsAsync(Guid organizationId, CancellationToken cancellationToken = default);
+    Task<OrganizationMembership?> UpdateMembershipAsync(Guid organizationId, Guid membershipId, string role, bool isActive, CancellationToken cancellationToken = default);
     Task<bool> BranchBelongsToOrganizationAsync(Guid branchId, Guid organizationId, CancellationToken cancellationToken = default);
     Task<Organization> CreateAsync(Organization organization, CancellationToken cancellationToken = default);
     Task<Branch> AddBranchAsync(Branch branch, CancellationToken cancellationToken = default);

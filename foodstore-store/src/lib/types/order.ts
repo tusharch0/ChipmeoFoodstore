@@ -1,7 +1,10 @@
 export interface Order {
-	id: number;
+	id: string;
 	orderCode: string;
-	sourceId?: number;
+	branchId?: string;
+	branchName?: string;
+	kitchenRouting?: string;
+	sourceId?: string;
 	sourceName?: string;
 	source?: { id: number; name: string };
 	customerId?: number;
@@ -54,7 +57,7 @@ export type OrderStatus =
 	| 'cancelled';
 
 export interface OrderCreateDto {
-	sourceId?: number;
+	sourceId?: string;
 	customerName?: string;
 	customerPhone?: string;
 	items: OrderItemCreateDto[];

@@ -41,9 +41,9 @@ public static class CacheKeys
 
     public static class Dashboard
     {
-        public static string Overview => "dashboard:overview";
-        public static string Stats(string from, string to, string groupBy) => $"dashboard:stats:{from}:{to}:{groupBy}";
-        public static string Forecast(int horizon) => $"dashboard:forecast:{horizon}";
-        public static string ComboRecommendations => "dashboard:combo_recommendations";
+        public static string Overview(string scope) => $"dashboard:overview:{scope}";
+        public static string Stats(string scope, string from, string to, string groupBy) => $"dashboard:stats:{scope}:{from}:{to}:{groupBy}";
+        public static string Forecast(string scope, int horizon) => $"dashboard:forecast:{scope}:{horizon}";
+        public static string ComboRecommendations(string scope) => $"dashboard:combo_recommendations:{scope}";
     }
 }

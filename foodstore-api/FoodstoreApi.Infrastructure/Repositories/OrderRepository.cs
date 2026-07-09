@@ -13,6 +13,7 @@ public class OrderRepository(StoreDbContext context) : IOrderRepository
     public async Task<IEnumerable<Order>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Orders.AsNoTracking()
+            .Include(o => o.Branch)
             .Include(o => o.Source)
             .Include(o => o.Employee)
             .Include(o => o.Discount)
@@ -26,6 +27,8 @@ public class OrderRepository(StoreDbContext context) : IOrderRepository
     public async Task<Order?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Orders
+            .Include(o => o.Branch!)
+                .ThenInclude(branch => branch.Organization)
             .Include(o => o.Source)
             .Include(o => o.Employee)
             .Include(o => o.Discount)
@@ -64,6 +67,7 @@ public class OrderRepository(StoreDbContext context) : IOrderRepository
     public async Task<IEnumerable<Order>> GetByStatusAsync(string status, CancellationToken cancellationToken = default)
     {
         return await _context.Orders.AsNoTracking()
+            .Include(o => o.Branch)
             .Include(o => o.Source)
             .Include(o => o.Employee)
             .Include(o => o.OrderItems)
@@ -76,6 +80,7 @@ public class OrderRepository(StoreDbContext context) : IOrderRepository
     public async Task<IEnumerable<Order>> GetBySourceIdAsync(Guid sourceId, CancellationToken cancellationToken = default)
     {
         return await _context.Orders.AsNoTracking()
+            .Include(o => o.Branch)
             .Include(o => o.OrderItems)
             .Where(o => o.SourceId == sourceId)
             .OrderByDescending(o => o.CreatedAt)
@@ -105,6 +110,7 @@ public class OrderRepository(StoreDbContext context) : IOrderRepository
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
+            .Include(o => o.Branch)
             .Include(o => o.Source)
             .Include(o => o.Employee)
             .Include(o => o.Customer)
@@ -153,6 +159,7 @@ public class OrderRepository(StoreDbContext context) : IOrderRepository
     {
         return await _context.Orders
             .AsNoTracking()
+            .Include(o => o.Branch)
             .Include(o => o.Source)
             .Include(o => o.Employee)
             .Include(o => o.OrderItems)

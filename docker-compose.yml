@@ -5,12 +5,9 @@ services:
     image: traefik:v3.7.5
     container_name: traefik
     command:
-      - "--api.insecure=true"
-      - "--api.dashboard=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:8080"
-      - "--entrypoints.traefik.address=:9090"
     ports:
       - "80:8080"
     volumes:
@@ -95,6 +92,7 @@ services:
       JwtSettings__Audience: "FoodstoreFrontend"
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
       ASPNETCORE_HTTP_PORTS: "8080"
+      Database__AutoMigrate: ${DATABASE_AUTO_MIGRATE:-true}
       AllowedOrigins__0: "http://admin.localhost"
       AllowedOrigins__1: "http://store.localhost"
       AllowedOrigins__2: "http://localhost"

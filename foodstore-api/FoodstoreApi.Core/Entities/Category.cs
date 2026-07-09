@@ -3,6 +3,8 @@
 public partial class Category : IAuditableEntity
 {
     public Guid Id { get; set; }
+    public Guid? BranchId { get; set; }
+    public virtual Branch? Branch { get; set; }
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }

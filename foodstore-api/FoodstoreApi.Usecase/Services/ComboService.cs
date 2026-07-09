@@ -12,17 +12,19 @@ public class ComboService : IComboService
     private readonly IComboRepository _repository;
     private readonly IMediaService _mediaService;
     private readonly IDistributedCache _cache;
+    private readonly ITenantContext _tenantContext;
 
-    public ComboService(IComboRepository repository, IMediaService mediaService, IDistributedCache cache)
+    public ComboService(IComboRepository repository, IMediaService mediaService, IDistributedCache cache, ITenantContext tenantContext)
     {
         _repository = repository;
         _mediaService = mediaService;
         _cache = cache;
+        _tenantContext = tenantContext;
     }
 
     public async Task<IEnumerable<ComboDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _cache.GetOrSetAsync(CacheKeys.Combos.All, async () =>
+        return await _cache.GetOrSetAsync(AllKey, async () =>
         {
             var combos = await _repository.GetAllAsync(cancellationToken);
             return combos.Select(MapToDto).ToList();
@@ -44,6 +46,7 @@ public class ComboService : IComboService
             Description = dto.Description,
             ImageUrl = dto.ImageUrl,
             IsActive = dto.IsActive,
+            BranchId = RequireBranchId(),
 
             ComboItems = dto.Items.Select(i => new ComboItem
             {
@@ -60,7 +63,7 @@ public class ComboService : IComboService
             await _mediaService.LinkMediaToEntityAsync(dto.ImageUrl, "combo", created.Id);
         }
 
-        await _cache.RemoveAsync(CacheKeys.Combos.All, cancellationToken);
+        await _cache.RemoveAsync(AllKey, cancellationToken);
         return MapToDto(created);
     }
 
@@ -93,7 +96,7 @@ public class ComboService : IComboService
             {
                 await _mediaService.LinkMediaToEntityAsync(dto.ImageUrl, "combo", id);
             }
-            await _cache.RemoveAsync(CacheKeys.Combos.All, cancellationToken);
+            await _cache.RemoveAsync(AllKey, cancellationToken);
             await _cache.RemoveAsync(CacheKeys.Combos.ById(id), cancellationToken);
         }
         
@@ -105,7 +108,7 @@ public class ComboService : IComboService
         var result = await _repository.DeleteAsync(id, cancellationToken);
         if (result)
         {
-            await _cache.RemoveAsync(CacheKeys.Combos.All, cancellationToken);
+            await _cache.RemoveAsync(AllKey, cancellationToken);
             await _cache.RemoveAsync(CacheKeys.Combos.ById(id), cancellationToken);
         }
         return result;
@@ -136,4 +139,7 @@ public class ComboService : IComboService
             }).ToList() ?? new List<ComboItemDto>()
         };
     }
+
+    private string AllKey => $"{CacheKeys.Combos.All}:{_tenantContext.CacheScope}";
+    private Guid RequireBranchId() => _tenantContext.BranchId ?? throw new InvalidOperationException("An active branch is required.");
 }

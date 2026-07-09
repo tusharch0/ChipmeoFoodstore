@@ -195,6 +195,8 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
                 .WithMany(e => e.Employees)
                 .HasForeignKey(e => e.BranchId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
         });
 
         // Customers
@@ -227,11 +229,14 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.ToTable("categories");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Name).HasMaxLength(100).HasColumnName("name").UseCollation("vi_ci_ai");
             entity.Property(e => e.Description).HasMaxLength(255).HasColumnName("description").UseCollation("vi_ci_ai");
             entity.Property(e => e.ImageUrl).HasMaxLength(500).HasColumnName("image_url");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.ConfigureAudit();
+            entity.HasIndex(e => e.BranchId);
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
         });
 
         // Menu Items
@@ -240,6 +245,7 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.ToTable("menu_items");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.CategoryId).HasColumnName("category_id");
             entity.Property(e => e.Name).HasMaxLength(100).HasColumnName("name").UseCollation("vi_ci_ai");
             entity.Property(e => e.Description).HasMaxLength(500).HasColumnName("description").UseCollation("vi_ci_ai");
@@ -247,6 +253,8 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.Property(e => e.ImageUrl).HasMaxLength(500).HasColumnName("image_url");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.ConfigureAudit();
+            entity.HasIndex(e => e.BranchId);
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
 
             entity.HasOne(e => e.Category)
                 .WithMany(c => c.MenuItems)
@@ -260,10 +268,13 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.ToTable("addons");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Name).HasMaxLength(100).HasColumnName("name").UseCollation("vi_ci_ai");
             entity.Property(e => e.Price).HasColumnType("decimal(10,0)").HasColumnName("price");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.ConfigureAudit();
+            entity.HasIndex(e => e.BranchId);
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
         });
 
         // MenuItemAddons
@@ -297,12 +308,15 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.ToTable("combos");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Name).HasMaxLength(100).HasColumnName("name").UseCollation("vi_ci_ai");
             entity.Property(e => e.ComboPrice).HasColumnType("decimal(10,0)").HasColumnName("combo_price");
             entity.Property(e => e.Description).HasMaxLength(500).HasColumnName("description").UseCollation("vi_ci_ai");
             entity.Property(e => e.ImageUrl).HasMaxLength(500).HasColumnName("image_url");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.ConfigureAudit();
+            entity.HasIndex(e => e.BranchId);
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
         });
 
         // ComboItems
@@ -335,6 +349,7 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.ToTable("discounts");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Code).HasMaxLength(50).HasColumnName("code");
             entity.Property(e => e.Name).HasMaxLength(100).HasColumnName("name").UseCollation("vi_ci_ai");
             entity.Property(e => e.Type).HasMaxLength(10).HasColumnName("type");
@@ -347,7 +362,8 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
             entity.ConfigureAudit();
-            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => new { e.BranchId, e.Code }).IsUnique();
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
         });
 
         // Sources
@@ -530,6 +546,7 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.ToTable("payment_settings");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.BankId).HasMaxLength(50).HasColumnName("bank_id");
             entity.Property(e => e.BankAccount).HasMaxLength(50).HasColumnName("bank_account");
             entity.Property(e => e.BankName).HasMaxLength(100).HasColumnName("bank_name").UseCollation("vi_ci_ai");
@@ -538,6 +555,8 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.IsDefault).HasColumnName("is_default");
             entity.ConfigureAudit();
+            entity.HasIndex(e => e.BranchId);
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
         });
 
         // Blog Posts
@@ -898,17 +917,19 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.Property(e => e.ToDate).HasColumnName("to_date");
             entity.Property(e => e.IsExport).HasColumnName("is_export");
             entity.ConfigureAudit();
+            entity.HasIndex(e => e.BranchId);
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
             entity.HasIndex(e => new { e.OrganizationId, e.CreatedAt });
         });
 
         modelBuilder.Entity<LedgerAccount>(entity =>
         {
             entity.ToTable("ledger_accounts"); entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.OrganizationId).HasColumnName("organization_id");
+            entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.OrganizationId).HasColumnName("organization_id"); entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Code).HasMaxLength(80).HasColumnName("code"); entity.Property(e => e.Name).HasMaxLength(160).HasColumnName("name");
             entity.Property(e => e.AccountType).HasMaxLength(30).HasColumnName("account_type"); entity.Property(e => e.Currency).HasMaxLength(3).HasColumnName("currency");
             entity.Property(e => e.IsSystem).HasColumnName("is_system"); entity.Property(e => e.IsActive).HasColumnName("is_active"); entity.ConfigureAudit();
-            entity.HasIndex(e => new { e.OrganizationId, e.Code, e.Currency }).IsUnique();
+            entity.HasIndex(e => new { e.OrganizationId, e.BranchId, e.Code, e.Currency }).IsUnique();
         });
         modelBuilder.Entity<LedgerJournal>(entity =>
         {
@@ -946,7 +967,7 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
         });
         modelBuilder.Entity<SettlementLine>(entity =>
         {
-            entity.ToTable("settlement_lines"); entity.HasKey(e => e.Id); entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.SettlementBatchId).HasColumnName("settlement_batch_id"); entity.Property(e => e.PaymentIntentId).HasColumnName("payment_intent_id"); entity.Property(e => e.GrossAmount).HasColumnType("decimal(18,2)").HasColumnName("gross_amount"); entity.Property(e => e.CommissionAmount).HasColumnType("decimal(18,2)").HasColumnName("commission_amount"); entity.Property(e => e.ProviderFeeAmount).HasColumnType("decimal(18,2)").HasColumnName("provider_fee_amount"); entity.Property(e => e.NetAmount).HasColumnType("decimal(18,2)").HasColumnName("net_amount"); entity.ConfigureAudit(); entity.HasIndex(e => e.PaymentIntentId).IsUnique(); entity.HasOne(e => e.SettlementBatch).WithMany(e => e.Lines).HasForeignKey(e => e.SettlementBatchId).OnDelete(DeleteBehavior.Restrict);
+            entity.ToTable("settlement_lines"); entity.HasKey(e => e.Id); entity.Property(e => e.Id).HasColumnName("id"); entity.Property(e => e.SettlementBatchId).HasColumnName("settlement_batch_id"); entity.Property(e => e.PaymentIntentId).HasColumnName("payment_intent_id"); entity.Property(e => e.Provider).HasMaxLength(50).HasColumnName("provider"); entity.Property(e => e.ProviderReference).HasMaxLength(200).HasColumnName("provider_reference"); entity.Property(e => e.GrossAmount).HasColumnType("decimal(18,2)").HasColumnName("gross_amount"); entity.Property(e => e.CommissionAmount).HasColumnType("decimal(18,2)").HasColumnName("commission_amount"); entity.Property(e => e.ProviderFeeAmount).HasColumnType("decimal(18,2)").HasColumnName("provider_fee_amount"); entity.Property(e => e.NetAmount).HasColumnType("decimal(18,2)").HasColumnName("net_amount"); entity.ConfigureAudit(); entity.HasIndex(e => e.PaymentIntentId).IsUnique(); entity.HasOne(e => e.SettlementBatch).WithMany(e => e.Lines).HasForeignKey(e => e.SettlementBatchId).OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<ReconciliationCase>(entity =>
         {

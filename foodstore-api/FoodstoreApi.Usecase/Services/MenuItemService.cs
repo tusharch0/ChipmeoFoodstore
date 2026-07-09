@@ -12,17 +12,19 @@ public class MenuItemService : IMenuItemService
     private readonly IMenuItemRepository _repo;
     private readonly IDistributedCache _cache;
     private readonly IMediaService _mediaService;
+    private readonly ITenantContext _tenantContext;
 
-    public MenuItemService(IMenuItemRepository repo, IDistributedCache cache, IMediaService mediaService)
+    public MenuItemService(IMenuItemRepository repo, IDistributedCache cache, IMediaService mediaService, ITenantContext tenantContext)
     {
         _repo = repo;
         _cache = cache;
         _mediaService = mediaService;
+        _tenantContext = tenantContext;
     }
 
     public async Task<IEnumerable<MenuItemDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _cache.GetOrSetAsync(CacheKeys.MenuItems.All, async () =>
+        return await _cache.GetOrSetAsync(AllKey, async () =>
         {
             var items = await _repo.GetAllAsync(cancellationToken);
             return items.Select(i => new MenuItemDto(
@@ -69,6 +71,7 @@ public class MenuItemService : IMenuItemService
         var entity = new MenuItem 
         { 
             CategoryId = dto.CategoryId, 
+            BranchId = RequireBranchId(),
             Name = dto.Name, 
             Price = dto.Price,
             ImageUrl = dto.ImageUrl,
@@ -82,7 +85,7 @@ public class MenuItemService : IMenuItemService
             await _mediaService.LinkMediaToEntityAsync(dto.ImageUrl, "menu_item", created.Id);
         }
 
-        await _cache.RemoveAsync(CacheKeys.MenuItems.All, cancellationToken);
+        await _cache.RemoveAsync(AllKey, cancellationToken);
         return new MenuItemDto(
             created.Id, 
             created.CategoryId, 
@@ -130,7 +133,7 @@ public class MenuItemService : IMenuItemService
             await _mediaService.LinkMediaToEntityAsync(dto.ImageUrl, "menu_item", id);
         }
 
-        await _cache.RemoveAsync(CacheKeys.MenuItems.All, cancellationToken);
+        await _cache.RemoveAsync(AllKey, cancellationToken);
         return true;
     }
 
@@ -141,7 +144,10 @@ public class MenuItemService : IMenuItemService
         
         await _repo.DeleteAsync(existing, cancellationToken);
         await _mediaService.DeleteMediaByEntityAsync("menu_item", id);
-        await _cache.RemoveAsync(CacheKeys.MenuItems.All, cancellationToken);
+        await _cache.RemoveAsync(AllKey, cancellationToken);
         return true;
     }
+
+    private string AllKey => $"{CacheKeys.MenuItems.All}:{_tenantContext.CacheScope}";
+    private Guid RequireBranchId() => _tenantContext.BranchId ?? throw new InvalidOperationException("An active branch is required.");
 }

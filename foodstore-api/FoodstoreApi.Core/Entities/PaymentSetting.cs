@@ -3,6 +3,8 @@
 public partial class PaymentSetting : IAuditableEntity
 {
     public Guid Id { get; set; }
+    public Guid? BranchId { get; set; }
+    public virtual Branch? Branch { get; set; }
     public string BankId { get; set; } = null!;
     public string BankAccount { get; set; } = null!;
     public string BankName { get; set; } = null!;

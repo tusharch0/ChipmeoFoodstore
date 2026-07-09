@@ -21,12 +21,14 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { employeeService } from "@/lib/services/employee-service"
 import { mediaService } from "@/lib/services/media-service"
 import { roleService } from "@/lib/services/role-service"
+import { organizationService } from "@/lib/services/organization-service"
 import { formatDateTime } from "@/lib/utils"
-import type { Employee, EmployeeCreateDto, EmployeeUpdateDto, Role } from "@/lib/types"
+import type { Employee, EmployeeCreateDto, EmployeeUpdateDto, Organization, Role } from "@/lib/types"
 
 export default function EmployeeAllPage() {
   const [data, setData] = React.useState<Employee[]>([])
   const [roles, setRoles] = React.useState<Role[]>([])
+  const [organizations, setOrganizations] = React.useState<Organization[]>([])
   const [loading, setLoading] = React.useState(true)
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<Employee | null>(null)
@@ -36,28 +38,30 @@ export default function EmployeeAllPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<Employee | null>(null)
 
   const [formName, setFormName] = React.useState("")
+  const [formUsername, setFormUsername] = React.useState("")
   const [formEmail, setFormEmail] = React.useState("")
   const [formPhone, setFormPhone] = React.useState("")
   const [formPassword, setFormPassword] = React.useState("")
   const [formRoleId, setFormRoleId] = React.useState("")
+  const [formBranchId, setFormBranchId] = React.useState("")
   const [formIsActive, setFormIsActive] = React.useState(true)
   const [formImage, setFormImage] = React.useState<string | null>(null)
 
   const loadData = React.useCallback(async () => {
     setLoading(true)
     try {
-      const [emps, rls] = await Promise.all([employeeService.getAll(), roleService.getAll()])
-      setData(emps); setRoles(rls.filter((r) => r.isActive))
+      const [emps, rls, orgs] = await Promise.all([employeeService.getAll(), roleService.getAll(), organizationService.list()])
+      setData(emps); setRoles(rls.filter((r) => r.isActive)); setOrganizations(orgs)
     } catch { toast.error("Failed to load data") }
     finally { setLoading(false) }
   }, [])
 
   React.useEffect(() => { loadData() }, [loadData])
 
-  const resetForm = () => { setFormName(""); setFormEmail(""); setFormPhone(""); setFormPassword(""); setFormRoleId(""); setFormIsActive(true); setFormImage(null); setEditing(null) }
+  const resetForm = () => { setFormName(""); setFormUsername(""); setFormEmail(""); setFormPhone(""); setFormPassword(""); setFormRoleId(""); setFormBranchId(organizations[0]?.branches[0]?.id ?? ""); setFormIsActive(true); setFormImage(null); setEditing(null) }
   const openCreate = () => { resetForm(); setSheetOpen(true) }
   const openEdit = (item: Employee) => {
-    setEditing(item); setFormName(item.fullName); setFormEmail(item.email ?? ""); setFormPhone(item.phone ?? ""); setFormPassword(""); setFormRoleId(item.roleId); setFormIsActive(item.isActive); setFormImage(item.avatarUrl ?? null); setSheetOpen(true)
+    setEditing(item); setFormName(item.fullName); setFormUsername(item.username); setFormEmail(item.email ?? ""); setFormPhone(item.phone ?? ""); setFormPassword(""); setFormRoleId(item.roleId); setFormBranchId(item.branchId ?? ""); setFormIsActive(item.isActive); setFormImage(item.avatarUrl ?? null); setSheetOpen(true)
   }
 
   const handleUpload = async (file: File): Promise<string> => {
@@ -69,7 +73,7 @@ export default function EmployeeAllPage() {
     if (!formName.trim()) { toast.error("Please enter a name"); return }
     setSubmitting(true)
     try {
-      const base = { fullName: formName.trim(), email: formEmail || undefined, phone: formPhone || undefined, isActive: formIsActive, roleId: formRoleId, avatarUrl: formImage || undefined }
+      const base = { fullName: formName.trim(), username: formUsername.trim(), email: formEmail || undefined, phone: formPhone || undefined, isActive: formIsActive, roleId: formRoleId, branchId: formBranchId, avatarUrl: formImage || undefined }
       if (editing) {
         await employeeService.update(editing.id, base as EmployeeUpdateDto)
         toast.success("Employee updated successfully")
@@ -101,6 +105,7 @@ export default function EmployeeAllPage() {
     { id: "email", accessorKey: "email", header: "Email", cell: ({ row }) => row.original.email || "—" },
     { id: "phone", accessorKey: "phone", header: "Phone", cell: ({ row }) => row.original.phone || "—" },
     { id: "role", header: "Role", cell: ({ row }) => row.original.roleName || "—" },
+    { id: "branch", header: "Branch", cell: ({ row }) => row.original.branchName || "—" },
     { id: "isActive", header: "Status", cell: ({ row }) => <StatusBadge status={row.original.isActive} /> },
     { id: "createdAt", header: "Created", cell: ({ row }) => formatDateTime(row.original.createdAt) },
     { id: "actions", header: "", cell: ({ row }) => (
@@ -140,11 +145,21 @@ export default function EmployeeAllPage() {
             <Input id="phone" value={formPhone} onChange={(e) => setFormPhone(e.target.value)} placeholder="0123456789" />
           </div>
           {!editing && (
-            <div className="space-y-2">
+            <><div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input id="username" value={formUsername} onChange={(e) => setFormUsername(e.target.value)} />
+            </div><div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="Leave blank = 123456" />
-            </div>
+            </div></>
           )}
+          <div className="space-y-2">
+            <Label htmlFor="branchId">Branch</Label>
+            <NativeSelect id="branchId" value={formBranchId} onChange={(e) => setFormBranchId(e.target.value)}>
+              <NativeSelectOption value="">Select branch</NativeSelectOption>
+              {organizations.flatMap((organization) => organization.branches.map((branch) => <NativeSelectOption key={branch.id} value={branch.id}>{organization.name} — {branch.name}</NativeSelectOption>))}
+            </NativeSelect>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="roleId">Role</Label>
             <NativeSelect id="roleId" value={formRoleId} onChange={(e) => setFormRoleId(e.target.value)}>

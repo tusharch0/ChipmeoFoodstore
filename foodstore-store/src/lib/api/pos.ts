@@ -38,7 +38,7 @@ export const posAPI = {
 		});
 	},
 
-	async updateOrder(id: number, data: OrderCreateDto): Promise<Order> {
+	async updateOrder(id: string, data: OrderCreateDto): Promise<Order> {
 		return apiRequest<Order>(`${API_ENDPOINTS.posOrders.create}/${id}`, {
 			method: 'PUT',
 			body: JSON.stringify(data)
@@ -46,7 +46,7 @@ export const posAPI = {
 	},
 
 	async updateOrderStatus(
-		id: number,
+		id: string,
 		status: string,
 		paymentMethod?: string,
 		paymentAmount?: number

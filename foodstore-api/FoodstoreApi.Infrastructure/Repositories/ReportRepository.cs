@@ -1,5 +1,6 @@
 ﻿using FoodstoreApi.Core.Constants;
 using FoodstoreApi.Core.Entities;
+using FoodstoreApi.Core.Entities.Finance;
 using FoodstoreApi.Usecase.Interfaces;
 using FoodstoreApi.Usecase.DTOs.Report;
 using FoodstoreApi.Infrastructure.Data;
@@ -343,7 +344,7 @@ public class ReportRepository(StoreDbContext context) : IReportRepository
         var orders = await _context.Orders.IgnoreQueryFilters().AsNoTracking()
             .Where(o => o.BranchId.HasValue && branchIds.Contains(o.BranchId.Value) && o.CreatedAt >= from && o.CreatedAt < to)
             .GroupBy(o => o.BranchId!.Value).Select(g => new { BranchId = g.Key, Count = g.Count() }).ToListAsync(cancellationToken);
-        var payments = await _context.PaymentIntents.IgnoreQueryFilters().AsNoTracking()
+        var paymentAttempts = await _context.PaymentIntents.IgnoreQueryFilters().AsNoTracking()
             .Where(p => p.BranchId.HasValue && branchIds.Contains(p.BranchId.Value) && p.UpdatedAt >= from && p.UpdatedAt < to)
             .GroupBy(p => new { p.BranchId, p.Status }).Select(g => new { g.Key.BranchId, g.Key.Status, Count = g.Count(), Amount = g.Sum(x => x.Amount) }).ToListAsync(cancellationToken);
         var journals = await _context.LedgerJournals.IgnoreQueryFilters().AsNoTracking().Include(j => j.Lines).ThenInclude(l => l.Account)
@@ -351,37 +352,48 @@ public class ReportRepository(StoreDbContext context) : IReportRepository
             .ToListAsync(cancellationToken);
         var walletLines = await _context.LedgerJournalLines.IgnoreQueryFilters().AsNoTracking()
             .Where(l => l.Account.OrganizationId == request.OrganizationId && l.Account.Code == "RESTAURANT_WALLET" && l.Account.Currency == organization.CurrencyCode)
-            .Select(l => l.Credit - l.Debit).ToListAsync(cancellationToken);
-        var settlements = await _context.SettlementBatches.IgnoreQueryFilters().AsNoTracking()
+            .Select(l => new { l.Account.BranchId, Amount = l.Credit - l.Debit }).ToListAsync(cancellationToken);
+        var settlements = await _context.SettlementBatches.IgnoreQueryFilters().AsNoTracking().Include(batch => batch.Lines)
             .Where(b => b.OrganizationId == request.OrganizationId && b.PeriodDate >= request.FromDate && b.PeriodDate <= request.ToDate)
             .ToListAsync(cancellationToken);
+        var settlementIntentIds = settlements.SelectMany(batch => batch.Lines).Select(line => line.PaymentIntentId).Distinct().ToList();
+        var settlementBranches = await _context.PaymentIntents.IgnoreQueryFilters().AsNoTracking()
+            .Where(intent => settlementIntentIds.Contains(intent.Id) && intent.BranchId.HasValue)
+            .ToDictionaryAsync(intent => intent.Id, intent => intent.BranchId!.Value, cancellationToken);
+        bool SettlementContainsSelectedBranch(SettlementBatch batch) => !request.BranchId.HasValue ||
+            batch.Lines.Any(line => settlementBranches.GetValueOrDefault(line.PaymentIntentId) == request.BranchId.Value);
+        decimal SettlementAmount(SettlementBatch batch) => !request.BranchId.HasValue ? batch.NetAmount :
+            batch.Lines.Where(line => settlementBranches.GetValueOrDefault(line.PaymentIntentId) == request.BranchId.Value).Sum(line => line.NetAmount);
 
         var summaries = branches.Select(branch =>
         {
             var orderCount = orders.Where(x => x.BranchId == branch.Id).Sum(x => x.Count);
-            var succeeded = payments.Where(x => x.BranchId == branch.Id && x.Status == "succeeded").ToList();
-            var refunded = payments.Where(x => x.BranchId == branch.Id && x.Status == "refunded").ToList();
-            var gross = succeeded.Sum(x => x.Amount);
-            var refunds = refunded.Sum(x => x.Amount);
-            var branchWallet = journals.Where(j => j.BranchId == branch.Id).SelectMany(j => j.Lines)
+            var paymentJournals = journals.Where(j => j.BranchId == branch.Id && j.EntryType == "payment_confirmed").ToList();
+            var refundJournals = journals.Where(j => j.BranchId == branch.Id && j.EntryType == "payment_refunded").ToList();
+            var gross = paymentJournals.SelectMany(j => j.Lines).Where(l => l.Account.Code == "PROVIDER_CLEARING").Sum(l => l.Debit);
+            var refunds = refundJournals.SelectMany(j => j.Lines).Where(l => l.Account.Code == "RESTAURANT_WALLET").Sum(l => l.Debit);
+            var net = paymentJournals.Concat(refundJournals).SelectMany(j => j.Lines)
                 .Where(l => l.Account.Code == "RESTAURANT_WALLET").Sum(l => l.Credit - l.Debit);
-            return new BranchFinancialSummary(branch.Id, branch.Name, orderCount, succeeded.Sum(x => x.Count),
-                orderCount == 0 ? 0 : Math.Round(succeeded.Sum(x => x.Count) * 100m / orderCount, 2), gross, refunds, gross - refunds, branchWallet);
+            var branchWallet = walletLines.Where(line => line.BranchId == branch.Id).Sum(line => line.Amount);
+            return new BranchFinancialSummary(branch.Id, branch.Name, orderCount, paymentJournals.Count,
+                orderCount == 0 ? 0 : Math.Round(paymentJournals.Count * 100m / orderCount, 2), gross, refunds, net, branchWallet);
         }).ToList();
         var commissions = journals.SelectMany(j => j.Lines).Where(l => l.Account.Code == "PLATFORM_COMMISSION").Sum(l => l.Credit);
         var providerFees = journals.SelectMany(j => j.Lines).Where(l => l.Account.Code == "PROVIDER_FEES").Sum(l => l.Debit);
-        var failedPayments = payments.Where(x => x.Status == "failed").Sum(x => x.Count);
-        var refundsAwaiting = payments.Where(x => x.Status == "refund_pending").Sum(x => x.Count);
+        var failedPayments = paymentAttempts.Where(x => x.Status == "failed").Sum(x => x.Count);
+        var refundsAwaiting = paymentAttempts.Where(x => x.Status == "refund_pending").Sum(x => x.Count);
         var reconciliationCount = await _context.ReconciliationCases.IgnoreQueryFilters().AsNoTracking()
-            .CountAsync(c => c.OrganizationId == request.OrganizationId && c.Status != "resolved", cancellationToken);
-        var walletPosition = walletLines.Sum();
+            .CountAsync(c => c.OrganizationId == request.OrganizationId && c.Status != "resolved" && (!request.BranchId.HasValue || c.BranchId == request.BranchId), cancellationToken);
+        var walletPosition = walletLines.Where(line => !request.BranchId.HasValue || line.BranchId == request.BranchId).Sum(line => line.Amount);
         var totals = new FinancialReportTotals(summaries.Sum(s => s.Orders), summaries.Sum(s => s.SuccessfulPayments),
             summaries.Sum(s => s.Orders) == 0 ? 0 : Math.Round(summaries.Sum(s => s.SuccessfulPayments) * 100m / summaries.Sum(s => s.Orders), 2),
             summaries.Sum(s => s.GrossSales), summaries.Sum(s => s.Refunds), commissions, providerFees,
-            summaries.Sum(s => s.NetSales) - commissions - providerFees, walletPosition,
-            settlements.Where(s => s.Status is not "paid" and not "reconciled").Sum(s => s.NetAmount), settlements.Count);
-        var exceptions = new FinancialExceptionSummary(failedPayments, refundsAwaiting, walletPosition < 0 || settlements.Any(s => s.Holds > 0) ? 1 : 0,
-            settlements.Count(s => s.Status == "failed"), reconciliationCount);
+            summaries.Sum(s => s.NetSales), walletPosition,
+            settlements.Where(s => s.Status is not "paid" and not "reconciled" && SettlementContainsSelectedBranch(s)).Sum(SettlementAmount),
+            settlements.Count(SettlementContainsSelectedBranch));
+        var exceptions = new FinancialExceptionSummary(failedPayments, refundsAwaiting,
+            walletPosition < 0 || settlements.Any(s => s.Holds > 0 && SettlementContainsSelectedBranch(s)) ? 1 : 0,
+            settlements.Count(s => s.Status == "failed" && SettlementContainsSelectedBranch(s)), reconciliationCount);
 
         _context.ReportAccessLogs.Add(new ReportAccessLog { Id = Guid.NewGuid(), OrganizationId = request.OrganizationId, BranchId = request.BranchId,
             ActorId = request.ActorId, ReportType = "financial", FromDate = request.FromDate, ToDate = request.ToDate, IsExport = request.IsExport });

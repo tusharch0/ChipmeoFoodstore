@@ -10,6 +10,7 @@ namespace FoodstoreApi.Web.Controllers;
 
 [ApiController]
 [Route("api/admin/payment-settings")]
+[Authorize]
 public class PaymentSettingsController : ControllerBase
 {
     private readonly IPaymentSettingService _service;
@@ -20,7 +21,6 @@ public class PaymentSettingsController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
         var setting = await _service.GetAsync(cancellationToken);

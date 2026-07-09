@@ -161,6 +161,9 @@ export interface DiscountUpdateDto {
 export interface Order {
   id: string;
   orderCode: string;
+  branchId?: string;
+  branchName?: string;
+  kitchenRouting?: string;
   sourceId?: string;
   sourceName?: string;
   customerId?: string;
@@ -260,6 +263,10 @@ export interface Employee {
   avatarUrl?: string | null;
   roleId: string;
   roleName?: string;
+  branchId?: string;
+  branchName?: string;
+  organizationId?: string;
+  organizationName?: string;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -273,6 +280,7 @@ export interface EmployeeCreateDto {
   phone?: string;
   avatarUrl?: string | null;
   roleId: string;
+  branchId?: string;
   isActive: boolean;
 }
 
@@ -283,6 +291,7 @@ export interface EmployeeUpdateDto {
   phone?: string;
   avatarUrl?: string | null;
   roleId: string;
+  branchId?: string;
   isActive: boolean;
 }
 
@@ -787,6 +796,9 @@ export interface EInvoiceDashboard {
   activeProviders: number;
 }
 
+export interface OrderReceiptLine { name: string; quantity: number; unitPrice: number; totalPrice: number }
+export interface OrderReceipt { orderId: string; orderCode: string; branchId?: string; branchName?: string; branchAddress?: string; customerName?: string; customerPhone?: string; subtotalAmount: number; discountAmount: number; vatAmount: number; totalAmount: number; currency: string; status: string; paidAt?: string; paymentIntentId?: string; provider?: string; providerReference?: string; items: OrderReceiptLine[] }
+
 export interface PaymentIntent {
   id: string; orderId: string; orderCode?: string; amount: number; currency: string; provider: string;
   providerReference?: string; checkoutId?: string; status: string; customerPhone?: string;
@@ -802,14 +814,16 @@ export interface PaymentIntentDetail extends PaymentIntent { events: PaymentEven
 
 export interface OrganizationBranch { id: string; name: string; code: string; address?: string; city?: string; phone?: string; isActive: boolean; openingHoursJson?: string; taxSettingsJson?: string; kitchenRouting?: string }
 export interface Organization { id: string; name: string; currencyCode: string; branches: OrganizationBranch[] }
+export interface OrganizationMembership { id: string; userId: string; name: string; email?: string; role: "owner" | "manager" | "finance" | "member"; isActive: boolean; branchId?: string; branchName?: string }
 export interface FinancialReportTotals { orders: number; successfulPayments: number; paymentConversionRate: number; grossSales: number; refunds: number; commissions: number; providerFees: number; netSales: number; walletPosition: number; pendingSettlement: number; settlementCount: number }
 export interface BranchFinancialSummary { branchId: string; branchName: string; orders: number; successfulPayments: number; paymentConversionRate: number; grossSales: number; refunds: number; netSales: number; walletPosition: number }
 export interface FinancialExceptionSummary { failedPayments: number; refundsAwaitingAction: number; negativeOrHeldWallets: number; settlementFailures: number; reconciliationDiscrepancies: number }
 export interface FinancialReport { organizationId: string; currency: string; timeZone: string; fromDate: string; toDate: string; totals: FinancialReportTotals; branches: BranchFinancialSummary[]; exceptions: FinancialExceptionSummary }
 export interface WalletBalance { organizationId: string; currency: string; available: number; pending: number; held: number; total: number }
-export interface LedgerJournal { id: string; entryType: string; sourceType: string; sourceId: string; description: string; currency: string; postedAt: string; debits: number; credits: number }
+export interface LedgerJournal { id: string; entryType: string; sourceType: string; sourceId: string; providerReference?: string; description: string; currency: string; postedAt: string; debits: number; credits: number }
 export interface LedgerAccount { id: string; organizationId?: string; code: string; name: string; accountType: string; currency: string }
-export interface SettlementLine { id: string; paymentIntentId: string; grossAmount: number; commissionAmount: number; providerFeeAmount: number; netAmount: number }
+export interface SettlementLine { id: string; paymentIntentId: string; provider?: string; providerReference?: string; grossAmount: number; commissionAmount: number; providerFeeAmount: number; netAmount: number }
 export interface SettlementBatch { id: string; organizationId: string; currency: string; periodDate: string; status: string; grossSales: number; refunds: number; providerFees: number; commissions: number; adjustments: number; holds: number; netAmount: number; payoutReference?: string; failureReason?: string; createdAt: string; lines?: SettlementLine[] }
 export interface FinanceAdjustment { id: string; organizationId: string; ledgerAccountId: string; amount: number; currency: string; reasonCode: string; reason: string; status: string; createdAt: string }
 export interface ReconciliationCase { id: string; organizationId: string; sourceType: string; sourceReference: string; internalAmount: number; externalAmount: number; currency: string; status: string; evidenceUrl?: string; resolution?: string; createdAt: string }
+export interface FinanceException { id: string; type: string; branchId?: string; reference: string; status: string; amount?: number; currency: string; detail?: string; occurredAt: string }

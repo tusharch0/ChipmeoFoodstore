@@ -70,6 +70,9 @@
 							>
 						</div>
 						<div class="flex flex-col gap-2">
+							{#if order.kitchenRouting}
+								<div class="w-fit rounded bg-slate-100 px-2 py-1 text-xs font-semibold uppercase text-slate-600">Station: {order.kitchenRouting}</div>
+							{/if}
 							{#each order.items as item, i (i)}
 								<div
 									class="flex flex-col border-b border-dashed border-gray-200 pb-2 last:border-b-0"

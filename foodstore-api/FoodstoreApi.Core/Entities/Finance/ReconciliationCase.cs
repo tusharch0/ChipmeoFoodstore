@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace FoodstoreApi.Core.Entities.Finance;
 
 /// <summary>Immutable investigation trail for provider or payout discrepancies.</summary>
@@ -5,6 +7,8 @@ public sealed class ReconciliationCase : IAuditableEntity
 {
     public Guid Id { get; set; }
     public Guid OrganizationId { get; set; }
+    [Column("branch_id")]
+    public Guid? BranchId { get; set; }
     public Guid? SettlementBatchId { get; set; }
     public string SourceType { get; set; } = null!;
     public string SourceReference { get; set; } = null!;

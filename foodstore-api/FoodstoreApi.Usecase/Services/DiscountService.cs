@@ -11,16 +11,18 @@ public class DiscountService : IDiscountService
 {
     private readonly IDiscountRepository _repository;
     private readonly IDistributedCache _cache;
+    private readonly ITenantContext _tenantContext;
 
-    public DiscountService(IDiscountRepository repository, IDistributedCache cache)
+    public DiscountService(IDiscountRepository repository, IDistributedCache cache, ITenantContext tenantContext)
     {
         _repository = repository;
         _cache = cache;
+        _tenantContext = tenantContext;
     }
 
     public async Task<IEnumerable<DiscountDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _cache.GetOrSetAsync(CacheKeys.Discounts.All, async () =>
+        return await _cache.GetOrSetAsync(AllKey, async () =>
         {
             var discounts = await _repository.GetAllAsync(cancellationToken);
             return discounts.Select(MapToDto).ToList();
@@ -48,11 +50,12 @@ public class DiscountService : IDiscountService
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             IsActive = dto.IsActive,
+            BranchId = RequireBranchId(),
 
         };
 
         var created = await _repository.CreateAsync(discount, cancellationToken);
-        await _cache.RemoveAsync(CacheKeys.Discounts.All, cancellationToken);
+        await _cache.RemoveAsync(AllKey, cancellationToken);
         return MapToDto(created);
     }
 
@@ -75,7 +78,7 @@ public class DiscountService : IDiscountService
         var result = await _repository.UpdateAsync(discount, cancellationToken);
         if (result)
         {
-            await _cache.RemoveAsync(CacheKeys.Discounts.All, cancellationToken);
+            await _cache.RemoveAsync(AllKey, cancellationToken);
             await _cache.RemoveAsync(CacheKeys.Discounts.ById(id), cancellationToken);
         }
         return result;
@@ -86,7 +89,7 @@ public class DiscountService : IDiscountService
         var result = await _repository.DeleteAsync(id, cancellationToken);
         if (result)
         {
-            await _cache.RemoveAsync(CacheKeys.Discounts.All, cancellationToken);
+            await _cache.RemoveAsync(AllKey, cancellationToken);
             await _cache.RemoveAsync(CacheKeys.Discounts.ById(id), cancellationToken);
         }
         return result;
@@ -114,4 +117,7 @@ public class DiscountService : IDiscountService
             UpdatedBy = discount.UpdatedBy
         };
     }
+
+    private string AllKey => $"{CacheKeys.Discounts.All}:{_tenantContext.CacheScope}";
+    private Guid RequireBranchId() => _tenantContext.BranchId ?? throw new InvalidOperationException("An active branch is required.");
 }

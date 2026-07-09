@@ -7,7 +7,7 @@ export const ordersAPI = {
 		return apiRequest<Order[]>(API_ENDPOINTS.orders.list);
 	},
 
-	async getById(id: number): Promise<Order> {
+	async getById(id: string): Promise<Order> {
 		return apiRequest<Order>(API_ENDPOINTS.orders.detail(id));
 	},
 
@@ -18,7 +18,7 @@ export const ordersAPI = {
 		});
 	},
 
-	async update(id: number, data: Partial<OrderCreateDto>): Promise<Order> {
+	async update(id: string, data: Partial<OrderCreateDto>): Promise<Order> {
 		return apiRequest<Order>(API_ENDPOINTS.orders.update(id), {
 			method: 'PUT',
 			body: JSON.stringify(data)
@@ -26,7 +26,7 @@ export const ordersAPI = {
 	},
 
 	async updateStatus(
-		id: number,
+		id: string,
 		status: string,
 		paymentMethod?: string,
 		paymentAmount?: number
@@ -38,13 +38,13 @@ export const ordersAPI = {
 		return true;
 	},
 
-	async delete(id: number): Promise<void> {
+	async delete(id: string): Promise<void> {
 		return apiRequest<void>(API_ENDPOINTS.orders.delete(id), {
 			method: 'DELETE'
 		});
 	},
 
-	async setUnpaid(id: number): Promise<void> {
+	async setUnpaid(id: string): Promise<void> {
 		return apiRequest<void>(API_ENDPOINTS.orders.setUnpaid(id), {
 			method: 'PUT'
 		});
@@ -78,7 +78,7 @@ export const ordersAPI = {
 		return apiRequest<Order[]>(API_ENDPOINTS.orders.byStatus(status));
 	},
 
-	async processPayment(id: number, paymentMethod: string, cashReceived?: number): Promise<Order> {
+	async processPayment(id: string, paymentMethod: string, cashReceived?: number): Promise<Order> {
 		return apiRequest<Order>(API_ENDPOINTS.orders.payment(id), {
 			method: 'POST',
 			body: JSON.stringify({ paymentMethod, cashReceived })

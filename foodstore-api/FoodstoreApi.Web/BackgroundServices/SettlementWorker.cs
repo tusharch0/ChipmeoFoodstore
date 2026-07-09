@@ -19,12 +19,21 @@ public sealed class SettlementWorker(IServiceScopeFactory scopeFactory, ILogger<
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StoreDbContext>();
         var service = scope.ServiceProvider.GetRequiredService<ISettlementService>();
-        var date = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(-1));
         var policies = await db.FinancePolicies.AsNoTracking().Where(p => p.IsActive && p.SettlementMode == "automatic" && p.SettlementCalendar == "daily").Select(p => p.OrganizationId).ToListAsync(ct);
         foreach (var organizationId in policies)
         {
-            var currency = await db.Organizations.AsNoTracking().Where(o => o.Id == organizationId).Select(o => o.CurrencyCode).SingleAsync(ct);
+            var organization = await db.Organizations.AsNoTracking().Where(o => o.Id == organizationId)
+                .Select(o => new { o.CurrencyCode, o.TimeZone }).SingleAsync(ct);
+            var zone = ResolveTimeZone(organization.TimeZone);
+            var date = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zone).Date.AddDays(-1));
+            var currency = organization.CurrencyCode;
             await service.GenerateAsync(organizationId, date, currency, Guid.Empty, ct);
         }
+    }
+
+    private static TimeZoneInfo ResolveTimeZone(string timeZone)
+    {
+        try { return TimeZoneInfo.FindSystemTimeZoneById(timeZone); }
+        catch (TimeZoneNotFoundException) { return TimeZoneInfo.FindSystemTimeZoneById("E. Africa Standard Time"); }
     }
 }

@@ -15,7 +15,9 @@ public class OrderService(
     IPaymentRepository paymentRepo,
     IPaymentSettingService paymentSettingService,
     ICustomerService customerService,
-    ITenantContext tenantContext) : IOrderService
+    ITenantContext tenantContext,
+    IOrganizationRepository organizationRepository,
+    IPaymentIntentRepository paymentIntentRepository) : IOrderService
 {
     private readonly IOrderRepository _orderRepo = orderRepo;
     private readonly IDiscountRepository _discountRepo = discountRepo;
@@ -27,6 +29,8 @@ public class OrderService(
     private readonly IPaymentSettingService _paymentSettingService = paymentSettingService;
     private readonly ICustomerService _customerService = customerService;
     private readonly ITenantContext _tenantContext = tenantContext;
+    private readonly IOrganizationRepository _organizationRepository = organizationRepository;
+    private readonly IPaymentIntentRepository _paymentIntentRepository = paymentIntentRepository;
 
     public async Task<IEnumerable<OrderDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -52,7 +56,7 @@ public class OrderService(
         if (dto.SourceId.HasValue && source is null)
             throw new InvalidOperationException("Order source was not found in the active branch.");
         
-        var details = await CalculateOrderDetailsAsync(dto, cancellationToken);
+        var details = await CalculateOrderDetailsAsync(dto, source?.BranchId ?? _tenantContext.BranchId, cancellationToken);
         
         // Handle Discount Usage
         if (details.Discount != null)
@@ -114,7 +118,7 @@ public class OrderService(
         }
 
         var now = DateTime.UtcNow;
-        var details = await CalculateOrderDetailsAsync(dto, cancellationToken);
+        var details = await CalculateOrderDetailsAsync(dto, source?.BranchId ?? order.BranchId, cancellationToken);
         
         // Handle Discount Usage Update
         if (order.DiscountId != details.Discount?.Id)
@@ -174,7 +178,7 @@ public class OrderService(
         return MapToDto(order);
     }
     
-    private async Task<(List<OrderItem> OrderItems, decimal Subtotal, decimal DiscountAmount, decimal VatAmount, decimal TotalAmount, Discount? Discount)> CalculateOrderDetailsAsync(CreateOrderDto dto, CancellationToken cancellationToken)
+    private async Task<(List<OrderItem> OrderItems, decimal Subtotal, decimal DiscountAmount, decimal VatAmount, decimal TotalAmount, Discount? Discount)> CalculateOrderDetailsAsync(CreateOrderDto dto, Guid? branchId, CancellationToken cancellationToken)
     {
         Discount? discount = null;
         decimal discountAmount = 0;
@@ -292,10 +296,43 @@ public class OrderService(
             }
         }
 
-        var vatAmount = subtotal * 0.10m;
+        var vatAmount = subtotal * await GetVatRateAsync(branchId, cancellationToken) / 100m;
         var totalAmount = subtotal - discountAmount + vatAmount;
         
         return (orderItems, subtotal, discountAmount, vatAmount, totalAmount, discount);
+    }
+
+    public async Task<OrderReceiptDto?> GetReceiptAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var order = await _orderRepo.GetByIdAsync(id, cancellationToken);
+        if (order is null) return null;
+        var intent = await _paymentIntentRepository.GetActiveByOrderIdAsync(id, cancellationToken);
+        var currency = intent?.Currency ?? order.Branch?.Organization?.CurrencyCode ?? "KES";
+        return new OrderReceiptDto(
+            order.Id, order.OrderCode, order.BranchId, order.Branch?.Name, order.Branch?.Address,
+            order.Customer?.User?.Name, order.Customer?.Phone, order.SubtotalAmount ?? 0m,
+            order.DiscountAmount ?? 0m, order.VatAmount ?? 0m, order.TotalAmount ?? 0m,
+            currency, order.Status ?? OrderStatus.Pending, order.PaidAt, intent?.Id, intent?.Provider,
+            intent?.ProviderReference, order.OrderItems.Select(item => new OrderReceiptLineDto(
+                item.MenuItemName ?? "Item", item.Quantity, item.UnitPrice, item.TotalPrice)).ToList());
+    }
+
+    private async Task<decimal> GetVatRateAsync(Guid? branchId, CancellationToken cancellationToken)
+    {
+        if (!branchId.HasValue) return 0m;
+        var branch = await _organizationRepository.GetBranchByIdAsync(branchId.Value, cancellationToken);
+        if (string.IsNullOrWhiteSpace(branch?.TaxSettingsJson)) return 0m;
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(branch.TaxSettingsJson);
+            return document.RootElement.TryGetProperty("vatRate", out var rate) && rate.TryGetDecimal(out var value) && value is >= 0m and <= 100m
+                ? value
+                : 0m;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            throw new InvalidOperationException("The branch tax settings are invalid JSON.");
+        }
     }
 
     public async Task<bool> UpdateStatusAsync(Guid id, string status, Guid? employeeId = null, string? paymentMethod = null, decimal? paymentAmount = null, CancellationToken cancellationToken = default)
@@ -489,6 +526,9 @@ public class OrderService(
         {
             Id = order.Id,
             OrderCode = order.OrderCode,
+            BranchId = order.BranchId,
+            BranchName = order.Branch?.Name,
+            KitchenRouting = order.Branch?.KitchenRouting,
             SourceId = order.SourceId,
             SourceName = order.Source?.Name,
             EmployeeId = order.EmployeeId,

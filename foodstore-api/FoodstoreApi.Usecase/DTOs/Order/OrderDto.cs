@@ -4,6 +4,9 @@ public class OrderDto
 {
     public Guid Id { get; set; }
     public string OrderCode { get; set; } = string.Empty;
+    public Guid? BranchId { get; set; }
+    public string? BranchName { get; set; }
+    public string? KitchenRouting { get; set; }
     public Guid? SourceId { get; set; }
     public string? SourceName { get; set; }
     public Guid? EmployeeId { get; set; }

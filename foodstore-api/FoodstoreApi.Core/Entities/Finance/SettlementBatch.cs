@@ -36,6 +36,8 @@ public sealed class SettlementLine : IAuditableEntity
     public Guid Id { get; set; }
     public Guid SettlementBatchId { get; set; }
     public Guid PaymentIntentId { get; set; }
+    public string? Provider { get; set; }
+    public string? ProviderReference { get; set; }
     public decimal GrossAmount { get; set; }
     public decimal CommissionAmount { get; set; }
     public decimal ProviderFeeAmount { get; set; }

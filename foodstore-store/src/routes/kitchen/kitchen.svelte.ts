@@ -77,7 +77,7 @@ export class KitchenState {
 			this.orders.push(order);
 		});
 
-		this.connection.on('ReceiveOrderUpdate', (update: { id: number; status: string }) => {
+		this.connection.on('ReceiveOrderUpdate', (update: { id: string; status: string }) => {
 			const index = this.orders.findIndex((o) => o.id === update.id);
 			if (index !== -1) {
 				// Svelte 5: Direct mutation for reactive objects
@@ -124,7 +124,7 @@ export class KitchenState {
 		this.isConnected = false;
 	}
 
-	async updateStatus(id: number, status: string) {
+	async updateStatus(id: string, status: string) {
 		try {
 			if (status === 'preparing') {
 				await api.put(API_ENDPOINTS.kitchen.start(id), {});

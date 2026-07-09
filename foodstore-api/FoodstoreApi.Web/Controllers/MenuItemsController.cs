@@ -15,11 +15,13 @@ public class MenuItemsController : ControllerBase
 {
     private readonly IMenuItemService _service;
     private readonly IHubContext<AppHub> _hubContext;
+    private readonly ITenantContext _tenantContext;
 
-    public MenuItemsController(IMenuItemService service, IHubContext<AppHub> hubContext)
+    public MenuItemsController(IMenuItemService service, IHubContext<AppHub> hubContext, ITenantContext tenantContext)
     {
         _service = service;
         _hubContext = hubContext;
+        _tenantContext = tenantContext;
     }
 
     [HttpGet]
@@ -44,7 +46,7 @@ public class MenuItemsController : ControllerBase
     public async Task<IActionResult> Create(CreateMenuItemDto dto, CancellationToken cancellationToken)
     {
         var created = await _service.CreateAsync(dto, cancellationToken);
-        await _hubContext.Clients.All.SendAsync("ReceiveMenuUpdate", cancellationToken);
+        await BroadcastAsync(cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
@@ -54,7 +56,7 @@ public class MenuItemsController : ControllerBase
     {
         var ok = await _service.UpdateAsync(id, dto, cancellationToken);
         if (!ok) return ApiResult.NotFound();
-        await _hubContext.Clients.All.SendAsync("ReceiveMenuUpdate", cancellationToken);
+        await BroadcastAsync(cancellationToken);
         return NoContent();
     }
 
@@ -66,7 +68,7 @@ public class MenuItemsController : ControllerBase
         {
             var ok = await _service.DeleteAsync(id, cancellationToken);
             if (!ok) return ApiResult.NotFound();
-            await _hubContext.Clients.All.SendAsync("ReceiveMenuUpdate", cancellationToken);
+            await BroadcastAsync(cancellationToken);
             return NoContent();
         }
         catch (Exception)
@@ -74,6 +76,10 @@ public class MenuItemsController : ControllerBase
             return ApiResult.BadRequest("Không thể xóa món này vì đã có trong đơn hàng hoặc combo.");
         }
     }
+
+    private Task BroadcastAsync(CancellationToken cancellationToken) => _tenantContext.BranchId.HasValue
+        ? _hubContext.Clients.Group(TenantHubGroups.Branch(_tenantContext.BranchId.Value)).SendAsync("ReceiveMenuUpdate", cancellationToken)
+        : Task.CompletedTask;
 
     // POS endpoints for read-only menu (public)
     [HttpGet("/api/pos/menu-items")]

@@ -3,9 +3,10 @@ using FoodstoreApi.Core.Entities;
 
 namespace FoodstoreApi.Usecase.Services;
 
-public class PaymentSettingService(IPaymentSettingRepository repository) : IPaymentSettingService
+public class PaymentSettingService(IPaymentSettingRepository repository, ITenantContext tenantContext) : IPaymentSettingService
 {
     private readonly IPaymentSettingRepository _repository = repository;
+    private readonly ITenantContext _tenantContext = tenantContext;
 
     public async Task<PaymentSetting?> GetAsync(CancellationToken cancellationToken = default)
     {
@@ -29,6 +30,7 @@ public class PaymentSettingService(IPaymentSettingRepository repository) : IPaym
         
         if (existing == null)
         {
+            setting.BranchId = _tenantContext.BranchId ?? throw new InvalidOperationException("An active branch is required.");
             // New payment setting - if it's set as default, clear other defaults
             if (setting.IsDefault)
             {

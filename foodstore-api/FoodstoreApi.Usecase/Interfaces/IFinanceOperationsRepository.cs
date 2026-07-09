@@ -1,3 +1,18 @@
 using FoodstoreApi.Core.Entities.Finance;
+using FoodstoreApi.Usecase.DTOs.Finance;
+
 namespace FoodstoreApi.Usecase.Interfaces;
-public interface IFinanceOperationsRepository { Task<FinanceAdjustmentRequest?> AdjustmentAsync(Guid id, CancellationToken ct = default); Task<IReadOnlyList<FinanceAdjustmentRequest>> AdjustmentsAsync(Guid organizationId, CancellationToken ct = default); Task AddAdjustmentAsync(FinanceAdjustmentRequest request, CancellationToken ct = default); Task ApproveAdjustmentAsync(FinanceAdjustmentRequest request, CancellationToken ct = default); Task<ReconciliationCase?> CaseAsync(Guid id, CancellationToken ct = default); Task<IReadOnlyList<ReconciliationCase>> CasesAsync(Guid organizationId, CancellationToken ct = default); Task AddCaseAsync(ReconciliationCase item, CancellationToken ct = default); Task SaveCaseAsync(ReconciliationCase item, CancellationToken ct = default); }
+
+public interface IFinanceOperationsRepository
+{
+    Task<IReadOnlyList<FinanceExceptionDto>> ExceptionsAsync(Guid organizationId, CancellationToken ct = default);
+    Task<IReadOnlyList<FinanceExceptionDto>> UnmatchedPaymentsAsync(CancellationToken ct = default);
+    Task<FinanceAdjustmentRequest?> AdjustmentAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<FinanceAdjustmentRequest>> AdjustmentsAsync(Guid organizationId, CancellationToken ct = default);
+    Task AddAdjustmentAsync(FinanceAdjustmentRequest request, CancellationToken ct = default);
+    Task ApproveAdjustmentAsync(FinanceAdjustmentRequest request, CancellationToken ct = default);
+    Task<ReconciliationCase?> CaseAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<ReconciliationCase>> CasesAsync(Guid organizationId, CancellationToken ct = default);
+    Task AddCaseAsync(ReconciliationCase item, CancellationToken ct = default);
+    Task SaveCaseAsync(ReconciliationCase item, CancellationToken ct = default);
+}

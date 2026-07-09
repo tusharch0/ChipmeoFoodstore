@@ -37,6 +37,7 @@ public class EmployeeRepository : IEmployeeRepository
     public async Task<Employee?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.Employees
+            .IgnoreQueryFilters()
             .Include(e => e.User)
             .Include(e => e.Role)
             .Include(e => e.Branch!)

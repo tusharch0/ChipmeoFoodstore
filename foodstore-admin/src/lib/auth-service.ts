@@ -36,6 +36,7 @@ export const authService = {
       skipAuth: true,
     });
     authToken = res.data.token;
+    if (typeof window !== "undefined") window.localStorage.removeItem("foodstore_admin_branch_id");
     return res.data;
   },
 

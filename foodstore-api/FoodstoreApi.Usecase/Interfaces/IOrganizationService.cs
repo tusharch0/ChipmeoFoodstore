@@ -9,4 +9,6 @@ public interface IOrganizationService
     Task<OrganizationDto> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default);
     Task<BranchDto?> AddBranchAsync(Guid organizationId, CreateBranchRequest request, CancellationToken cancellationToken = default);
     Task<BranchDto?> UpdateBranchAsync(Guid organizationId, Guid branchId, UpdateBranchRequest request, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<OrganizationMembershipDto>> GetMembershipsAsync(Guid organizationId, CancellationToken cancellationToken = default);
+    Task<OrganizationMembershipDto?> UpdateMembershipAsync(Guid organizationId, Guid membershipId, UpdateOrganizationMembershipRequest request, CancellationToken cancellationToken = default);
 }

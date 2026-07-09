@@ -360,3 +360,25 @@ folder: "menu-items" | "categories" | "combos" | "blog" | "avatars" | "misc"
 | `zalopay` | ZaloPay wallet |
 | `momo` | Momo wallet |
 | `card` | Bank card (POS terminal) |
+# Phase 5 multi-branch and finance endpoints
+
+All endpoints below require JWT authentication and the indicated permission. Organization owners and platform operators can select an authorized active branch with the `X-Branch-ID` request header; branch users may select only their claimed branch.
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/v2/api/admin/organizations` | Authorized organizations and branches |
+| POST | `/v2/api/admin/organizations/{organizationId}/branches` | Create branch |
+| PUT | `/v2/api/admin/organizations/{organizationId}/branches/{branchId}` | Update identity, address, hours, VAT, kitchen route, and state |
+| GET/PUT | `/v2/api/admin/organizations/{organizationId}/memberships[/{membershipId}]` | List/update organization roles (owner only) |
+| GET | `/v2/api/reports/financial/{organizationId}` | Ledger-backed financial report using Kenyan date boundaries |
+| GET | `/v2/api/reports/financial/{organizationId}/export` | Audited CSV report export |
+| GET | `/v2/api/reports/financial/{organizationId}/export.pdf` | Audited PDF report export |
+| GET | `/v2/api/admin/finance/wallet/{branchId}` | Branch wallet position |
+| GET | `/v2/api/admin/finance/ledger/{branchId}` | Branch journal statement |
+| GET | `/v2/api/admin/finance/ledger/{branchId}/export` | CSV statement with internal/provider references |
+| GET | `/v2/api/admin/finance/operations/exceptions/{organizationId}` | Organization financial exception queue |
+| GET | `/v2/api/admin/finance/operations/exceptions/unmatched` | Global unmatched-provider-event queue (platform only) |
+| GET | `/v2/api/admin/orders/{orderId}/receipt` | Customer receipt and transaction references |
+| GET | `/v2/api/admin/settlements/batch/{batchId}/export` | Settlement CSV with payout, intent, and provider references |
+
+Responses include `X-Correlation-ID`; clients may supply the same header (maximum 128 characters) to correlate logs.

@@ -3,6 +3,8 @@
 public partial class MenuItem : IAuditableEntity
 {
     public Guid Id { get; set; }
+    public Guid? BranchId { get; set; }
+    public virtual Branch? Branch { get; set; }
     public Guid? CategoryId { get; set; }
     public string Name { get; set; } = null!;
     public string? Description { get; set; }

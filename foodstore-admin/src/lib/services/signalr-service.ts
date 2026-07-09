@@ -1,4 +1,5 @@
 import * as signalR from "@microsoft/signalr";
+import { getAuthToken } from "@/lib/auth-service";
 
 type SignalREventHandler = (...args: unknown[]) => void;
 
@@ -9,8 +10,10 @@ class SignalRService {
   async connect(hubUrl: string = "/api/proxy/hubs/app"): Promise<void> {
     if (this.connection?.state === signalR.HubConnectionState.Connected) return;
 
+    const branchId = typeof window === "undefined" ? null : window.localStorage.getItem("foodstore_admin_branch_id");
+    const url = branchId ? `${hubUrl}?branchId=${encodeURIComponent(branchId)}` : hubUrl;
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl)
+      .withUrl(url, { accessTokenFactory: () => getAuthToken() ?? "" })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .build();
 

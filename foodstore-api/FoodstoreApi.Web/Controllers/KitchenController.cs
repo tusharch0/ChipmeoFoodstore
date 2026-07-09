@@ -11,7 +11,7 @@ namespace FoodstoreApi.Web.Controllers;
 [ApiController]
 [Route("api/kitchen")]
 [Authorize]
-public class KitchenController(IOrderService orderService, IHubContext<AppHub> hubContext) : ControllerBase
+public class KitchenController(IOrderService orderService, IHubContext<AppHub> hubContext, ITenantContext tenantContext) : ControllerBase
 {
     private readonly IOrderService _orderService = orderService;
     private readonly IHubContext<AppHub> _hubContext = hubContext;
@@ -62,7 +62,7 @@ public class KitchenController(IOrderService orderService, IHubContext<AppHub> h
             if (!success) return ApiResult.NotFound();
 
             // Notify all clients about status change
-            await _hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", new { Id = id, Status = "preparing" }, cancellationToken);
+            await NotifyBranchAsync(new { Id = id, Status = "preparing" }, cancellationToken);
             
             return NoContent();
         }
@@ -85,7 +85,7 @@ public class KitchenController(IOrderService orderService, IHubContext<AppHub> h
             if (!success) return ApiResult.NotFound();
 
             // Notify all clients about completion
-            await _hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", new { Id = id, Status = "served" }, cancellationToken);
+            await NotifyBranchAsync(new { Id = id, Status = "served" }, cancellationToken);
             
             return NoContent();
         }
@@ -94,6 +94,11 @@ public class KitchenController(IOrderService orderService, IHubContext<AppHub> h
             return ApiResult.BadRequest(ex.Message);
         }
     }
+
+    private Task NotifyBranchAsync(object payload, CancellationToken cancellationToken) =>
+        tenantContext.BranchId.HasValue
+            ? _hubContext.Clients.Group(TenantHubGroups.Branch(tenantContext.BranchId.Value)).SendAsync("ReceiveOrderUpdate", payload, cancellationToken)
+            : Task.CompletedTask;
 }
 
 

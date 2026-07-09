@@ -5,6 +5,7 @@ public sealed class LedgerAccount : IAuditableEntity
 {
     public Guid Id { get; set; }
     public Guid? OrganizationId { get; set; }
+    public Guid? BranchId { get; set; }
     public string Code { get; set; } = null!;
     public string Name { get; set; } = null!;
     public string AccountType { get; set; } = null!;

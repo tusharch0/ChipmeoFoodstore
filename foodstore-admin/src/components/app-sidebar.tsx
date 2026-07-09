@@ -7,6 +7,8 @@ import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { TeamSwitcher } from "@/components/team-switcher"
+import { organizationService } from "@/lib/services/organization-service"
+import type { OrganizationBranch } from "@/lib/types"
 import {
   Sidebar,
   SidebarContent,
@@ -223,6 +225,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const router = useRouter()
   const [settingsTab, setSettingsTab] = React.useState<"profile" | "settings" | null>(null)
+  const [branches, setBranches] = React.useState<(OrganizationBranch & { organizationName: string })[]>([])
+  const [activeBranchId, setActiveBranchId] = React.useState("")
+
+  React.useEffect(() => {
+    organizationService.list().then((organizations) => {
+      const items = organizations.flatMap((organization) => organization.branches.filter((branch) => branch.isActive).map((branch) => ({ ...branch, organizationName: organization.name })))
+      setBranches(items)
+      const stored = window.localStorage.getItem("foodstore_admin_branch_id")
+      const selected = items.some((branch) => branch.id === stored) ? stored! : items[0]?.id ?? ""
+      setActiveBranchId(selected)
+      if (selected) window.localStorage.setItem("foodstore_admin_branch_id", selected)
+    }).catch(() => undefined)
+  }, [])
 
   const currentModule = getModuleFromPath(pathname)
   const navItems = moduleMap[currentModule]
@@ -243,6 +258,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <Sidebar collapsible="icon" {...props}>
         <SidebarHeader>
           <TeamSwitcher teams={teams} activeTeam={activeTeam} onTeamChange={handleTeamChange} />
+          {branches.length > 0 && <select aria-label="Active restaurant branch" className="h-9 w-full rounded-md border bg-sidebar px-2 text-xs" value={activeBranchId} onChange={(event) => { window.localStorage.setItem("foodstore_admin_branch_id", event.target.value); setActiveBranchId(event.target.value); window.location.reload() }}>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.organizationName} — {branch.name}</option>)}</select>}
         </SidebarHeader>
         <SidebarContent>
           <NavMain items={navItems} />

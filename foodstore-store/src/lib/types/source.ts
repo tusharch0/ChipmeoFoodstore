@@ -1,5 +1,5 @@
 export interface Source {
-	id: number;
+	id: string;
 	name: string;
 	isActive: boolean;
 	createdAt?: string;

@@ -3,6 +3,8 @@
 public partial class Addon : IAuditableEntity
 {
     public Guid Id { get; set; }
+    public Guid? BranchId { get; set; }
+    public virtual Branch? Branch { get; set; }
     public string Name { get; set; } = null!;
     public decimal Price { get; set; }
     public bool? IsActive { get; set; }

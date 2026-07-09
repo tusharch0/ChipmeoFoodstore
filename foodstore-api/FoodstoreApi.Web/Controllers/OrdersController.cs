@@ -33,6 +33,14 @@ public class OrdersController(IOrderService service, IHubContext<AppHub> hubCont
         return ApiResult.Success(order);
     }
 
+    [HttpGet("{id:guid}/receipt")]
+    [RequirePermission("order.view")]
+    public async Task<IActionResult> GetReceipt(Guid id, CancellationToken cancellationToken)
+    {
+        var receipt = await service.GetReceiptAsync(id, cancellationToken);
+        return receipt is null ? ApiResult.NotFound() : ApiResult.Success(receipt);
+    }
+
     [HttpPost]
     [RequirePermission("order.create")]
     public async Task<IActionResult> Create([FromBody] CreateOrderDto dto, CancellationToken cancellationToken)
@@ -57,8 +65,8 @@ public class OrdersController(IOrderService service, IHubContext<AppHub> hubCont
             if (employeeId == Guid.Empty) return Unauthorized();
 
             var updated = await service.UpdateAsync(id, dto, employeeId, cancellationToken);
-            await hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", updated, cancellationToken);
-            await hubContext.Clients.All.SendAsync("ReceiveTableUpdate", cancellationToken);
+            await BroadcastAsync(updated.BranchId, "ReceiveOrderUpdate", updated, cancellationToken);
+            await BroadcastAsync(updated.BranchId, "ReceiveTableUpdate", new { updated.BranchId }, cancellationToken);
             return ApiResult.Success(updated);
         }
         catch (Exception ex)
@@ -76,9 +84,9 @@ public class OrdersController(IOrderService service, IHubContext<AppHub> hubCont
             var employeeId = User.GetUserId();
             var order = await service.ProcessPaymentAsync(id, dto, employeeId != Guid.Empty ? employeeId : null, cancellationToken);
 
-            await hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", order, cancellationToken);
-            await hubContext.Clients.All.SendAsync("ReceiveTableUpdate", cancellationToken);
-            await hubContext.Clients.Group("Kitchen").SendAsync("ReceiveNewOrder", order, cancellationToken);
+            await BroadcastAsync(order.BranchId, "ReceiveOrderUpdate", order, cancellationToken);
+            await BroadcastAsync(order.BranchId, "ReceiveTableUpdate", new { order.BranchId }, cancellationToken);
+            await BroadcastAsync(order.BranchId, "ReceiveNewOrder", order, cancellationToken);
             return ApiResult.Success(order);
         }
         catch (Exception ex)
@@ -95,8 +103,8 @@ public class OrdersController(IOrderService service, IHubContext<AppHub> hubCont
             if (employeeId == Guid.Empty) return Unauthorized();
 
             var created = await service.CreateAsync(dto, employeeId, cancellationToken);
-            await hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", created, cancellationToken);
-            await hubContext.Clients.All.SendAsync("ReceiveTableUpdate", cancellationToken);
+            await BroadcastAsync(created.BranchId, "ReceiveOrderUpdate", created, cancellationToken);
+            await BroadcastAsync(created.BranchId, "ReceiveTableUpdate", new { created.BranchId }, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (Exception ex)
@@ -127,9 +135,10 @@ public class OrdersController(IOrderService service, IHubContext<AppHub> hubCont
             var result = await service.UpdateStatusAsync(id, request.Status, employeeId != Guid.Empty ? employeeId : null, request.PaymentMethod, request.PaymentAmount, cancellationToken);
 
             if (!result) return ApiResult.NotFound();
-            await hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", new { Id = id, Status = request.Status }, cancellationToken);
+            var order = await service.GetByIdAsync(id, cancellationToken);
+            await BroadcastAsync(order?.BranchId, "ReceiveOrderUpdate", new { Id = id, Status = request.Status }, cancellationToken);
             if (request.Status == OrderStatus.Paid)
-                await hubContext.Clients.All.SendAsync("ReceiveSourceUpdate", cancellationToken);
+                await BroadcastAsync(order?.BranchId, "ReceiveSourceUpdate", new { order?.BranchId }, cancellationToken);
 
             return NoContent();
         }
@@ -168,7 +177,7 @@ public class OrdersController(IOrderService service, IHubContext<AppHub> hubCont
             var result = await service.UpdateStatusAsync(id, OrderStatus.Pending, employeeId != Guid.Empty ? employeeId : null, null, null, cancellationToken);
             if (!result) return ApiResult.BadRequest("Failed to update order status");
 
-            await hubContext.Clients.All.SendAsync("ReceiveOrderUpdate", new { Id = id, Status = OrderStatus.Pending }, cancellationToken);
+            await BroadcastAsync(order.BranchId, "ReceiveOrderUpdate", new { Id = id, Status = OrderStatus.Pending }, cancellationToken);
             return ApiResult.Success(new { message = "Order set to unpaid successfully" });
         }
         catch (Exception ex)
@@ -204,4 +213,10 @@ public class OrdersController(IOrderService service, IHubContext<AppHub> hubCont
         public string? PaymentMethod { get; set; }
         public decimal? PaymentAmount { get; set; }
     }
+
+
+    private Task BroadcastAsync(Guid? branchId, string eventName, object payload, CancellationToken cancellationToken) =>
+        branchId.HasValue
+            ? hubContext.Clients.Group(TenantHubGroups.Branch(branchId.Value)).SendAsync(eventName, payload, cancellationToken)
+            : Task.CompletedTask;
 }

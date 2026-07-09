@@ -29,6 +29,10 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_at");
@@ -61,6 +65,8 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.ToTable("addons", (string)null);
                 });
@@ -591,6 +597,10 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_at");
@@ -631,6 +641,8 @@ namespace FoodstoreApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchId");
+
                     b.ToTable("categories", (string)null);
                 });
 
@@ -640,6 +652,10 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
 
                     b.Property<decimal>("ComboPrice")
                         .HasColumnType("decimal(10,0)")
@@ -684,6 +700,8 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.ToTable("combos", (string)null);
                 });
@@ -807,6 +825,10 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -876,7 +898,7 @@ namespace FoodstoreApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("BranchId", "Code")
                         .IsUnique();
 
                     b.ToTable("discounts", (string)null);
@@ -1374,6 +1396,10 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("account_type");
 
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(80)
@@ -1422,7 +1448,7 @@ namespace FoodstoreApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrganizationId", "Code", "Currency")
+                    b.HasIndex("OrganizationId", "BranchId", "Code", "Currency")
                         .IsUnique();
 
                     b.ToTable("ledger_accounts", (string)null);
@@ -1569,6 +1595,10 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone")
@@ -1804,9 +1834,19 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("payment_intent_id");
 
+                    b.Property<string>("Provider")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("provider");
+
                     b.Property<decimal>("ProviderFeeAmount")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("provider_fee_amount");
+
+                    b.Property<string>("ProviderReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("provider_reference");
 
                     b.Property<Guid>("SettlementBatchId")
                         .HasColumnType("uuid")
@@ -2070,6 +2110,10 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
                     b.Property<Guid?>("CategoryId")
                         .HasColumnType("uuid")
                         .HasColumnName("category_id");
@@ -2117,6 +2161,8 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("CategoryId");
 
@@ -2854,6 +2900,10 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnName("bank_name")
                         .UseCollation("vi_ci_ai");
 
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_at");
@@ -2887,6 +2937,8 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.ToTable("payment_settings", (string)null);
                 });
@@ -2996,6 +3048,8 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .HasColumnName("updated_by");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("OrganizationId", "CreatedAt");
 
@@ -3208,6 +3262,15 @@ namespace FoodstoreApi.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("FoodstoreApi.Core.Entities.Addon", b =>
+                {
+                    b.HasOne("FoodstoreApi.Core.Entities.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
+                    b.Navigation("Branch");
+                });
+
             modelBuilder.Entity("FoodstoreApi.Core.Entities.BlogCategory", b =>
                 {
                     b.HasOne("FoodstoreApi.Core.Entities.BlogCategory", "Parent")
@@ -3306,6 +3369,24 @@ namespace FoodstoreApi.Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
+            modelBuilder.Entity("FoodstoreApi.Core.Entities.Category", b =>
+                {
+                    b.HasOne("FoodstoreApi.Core.Entities.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
+                    b.Navigation("Branch");
+                });
+
+            modelBuilder.Entity("FoodstoreApi.Core.Entities.Combo", b =>
+                {
+                    b.HasOne("FoodstoreApi.Core.Entities.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
+                    b.Navigation("Branch");
+                });
+
             modelBuilder.Entity("FoodstoreApi.Core.Entities.ComboItem", b =>
                 {
                     b.HasOne("FoodstoreApi.Core.Entities.Combo", "Combo")
@@ -3334,6 +3415,15 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FoodstoreApi.Core.Entities.Discount", b =>
+                {
+                    b.HasOne("FoodstoreApi.Core.Entities.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
+                    b.Navigation("Branch");
                 });
 
             modelBuilder.Entity("FoodstoreApi.Core.Entities.EInvoice", b =>
@@ -3439,10 +3529,16 @@ namespace FoodstoreApi.Infrastructure.Migrations
 
             modelBuilder.Entity("FoodstoreApi.Core.Entities.MenuItem", b =>
                 {
+                    b.HasOne("FoodstoreApi.Core.Entities.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
                     b.HasOne("FoodstoreApi.Core.Entities.Category", "Category")
                         .WithMany("MenuItems")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Branch");
 
                     b.Navigation("Category");
                 });
@@ -3622,6 +3718,15 @@ namespace FoodstoreApi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("FoodstoreApi.Core.Entities.PaymentSetting", b =>
+                {
+                    b.HasOne("FoodstoreApi.Core.Entities.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId");
+
+                    b.Navigation("Branch");
                 });
 
             modelBuilder.Entity("FoodstoreApi.Core.Entities.RefreshToken", b =>

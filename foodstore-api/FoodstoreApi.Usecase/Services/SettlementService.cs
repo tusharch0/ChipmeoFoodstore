@@ -10,6 +10,7 @@ public sealed class SettlementService(ISettlementRepository repository, ILedgerS
     {
         var batch = await repository.GetAsync(id, ct) ?? throw new InvalidOperationException("Settlement batch was not found.");
         if (!Transitions.TryGetValue(batch.Status, out var allowed) || !allowed.Contains(target)) throw new InvalidOperationException($"Cannot transition settlement from {batch.Status} to {target}.");
+        if (target == "submitted" && batch.Holds > 0m) throw new InvalidOperationException("A held settlement cannot be submitted until the hold is resolved.");
         if ((target == "reviewed" && batch.CreatedBy == actorId) || (target == "approved" && (batch.CreatedBy == actorId || batch.ReviewedBy == actorId))) throw new InvalidOperationException("Settlement requires a different maker and checker.");
         var now = DateTime.UtcNow; batch.Status = target;
         if (target == "reviewed") { batch.ReviewedBy = actorId; batch.ReviewedAt = now; } if (target == "approved") { batch.ApprovedBy = actorId; batch.ApprovedAt = now; } if (target is "paid" or "partially_paid") { batch.PaidBy = actorId; batch.PaidAt = now; batch.PayoutReference = payoutReference ?? throw new InvalidOperationException("A payout reference is required."); await ledgerService.StageSettlementPayoutAsync(batch, ct); }

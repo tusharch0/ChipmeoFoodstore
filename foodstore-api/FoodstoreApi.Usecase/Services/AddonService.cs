@@ -11,16 +11,18 @@ public class AddonService : IAddonService
 {
     private readonly IAddonRepository _repository;
     private readonly IDistributedCache _cache;
+    private readonly ITenantContext _tenantContext;
 
-    public AddonService(IAddonRepository repository, IDistributedCache cache)
+    public AddonService(IAddonRepository repository, IDistributedCache cache, ITenantContext tenantContext)
     {
         _repository = repository;
         _cache = cache;
+        _tenantContext = tenantContext;
     }
 
     public async Task<IEnumerable<AddonDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _cache.GetOrSetAsync(CacheKeys.Addons.All, async () =>
+        return await _cache.GetOrSetAsync(AllKey, async () =>
         {
             var addons = await _repository.GetAllAsync(cancellationToken);
             return addons.Select(MapToDto).ToList();
@@ -40,12 +42,13 @@ public class AddonService : IAddonService
             Name = dto.Name,
             Price = dto.Price,
             IsActive = dto.IsActive,
+            BranchId = RequireBranchId(),
 
         };
 
         var created = await _repository.CreateAsync(addon, cancellationToken);
-        await _cache.RemoveAsync(CacheKeys.Addons.All, cancellationToken);
-        await _cache.RemoveAsync(CacheKeys.MenuItems.All, cancellationToken);
+        await _cache.RemoveAsync(AllKey, cancellationToken);
+        await _cache.RemoveAsync(MenuItemsKey, cancellationToken);
         return MapToDto(created);
     }
 
@@ -61,9 +64,9 @@ public class AddonService : IAddonService
         var result = await _repository.UpdateAsync(addon, cancellationToken);
         if (result)
         {
-            await _cache.RemoveAsync(CacheKeys.Addons.All, cancellationToken);
+            await _cache.RemoveAsync(AllKey, cancellationToken);
             await _cache.RemoveAsync(CacheKeys.Addons.ById(id), cancellationToken);
-            await _cache.RemoveAsync(CacheKeys.MenuItems.All, cancellationToken);
+            await _cache.RemoveAsync(MenuItemsKey, cancellationToken);
         }
         return result;
     }
@@ -73,9 +76,9 @@ public class AddonService : IAddonService
         var result = await _repository.DeleteAsync(id, cancellationToken);
         if (result)
         {
-            await _cache.RemoveAsync(CacheKeys.Addons.All, cancellationToken);
+            await _cache.RemoveAsync(AllKey, cancellationToken);
             await _cache.RemoveAsync(CacheKeys.Addons.ById(id), cancellationToken);
-            await _cache.RemoveAsync(CacheKeys.MenuItems.All, cancellationToken);
+            await _cache.RemoveAsync(MenuItemsKey, cancellationToken);
         }
         return result;
     }
@@ -94,4 +97,8 @@ public class AddonService : IAddonService
             UpdatedBy = addon.UpdatedBy
         };
     }
+
+    private string AllKey => $"{CacheKeys.Addons.All}:{_tenantContext.CacheScope}";
+    private string MenuItemsKey => $"{CacheKeys.MenuItems.All}:{_tenantContext.CacheScope}";
+    private Guid RequireBranchId() => _tenantContext.BranchId ?? throw new InvalidOperationException("An active branch is required.");
 }

@@ -6,6 +6,7 @@ public interface IOrderService
 {
     Task<IEnumerable<OrderDto>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<OrderDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<OrderReceiptDto?> GetReceiptAsync(Guid id, CancellationToken cancellationToken = default);
     Task<OrderDto> CreateAsync(CreateOrderDto dto, Guid employeeId, CancellationToken cancellationToken = default);
     Task<OrderDto> ProcessPaymentAsync(Guid orderId, ProcessPaymentDto dto, Guid? employeeId = null, CancellationToken cancellationToken = default);
     Task<bool> UpdateStatusAsync(Guid id, string status, Guid? employeeId = null, string? paymentMethod = null, decimal? paymentAmount = null, CancellationToken cancellationToken = default);

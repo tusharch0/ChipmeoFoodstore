@@ -1,6 +1,7 @@
 using FoodstoreApi.Core.Entities;
 using FoodstoreApi.Usecase.DTOs.Organization;
 using FoodstoreApi.Usecase.Interfaces;
+using System.Text.Json;
 
 namespace FoodstoreApi.Usecase.Services;
 
@@ -18,6 +19,7 @@ public class OrganizationService(IOrganizationRepository repository) : IOrganiza
     public async Task<OrganizationDto> CreateAsync(CreateOrganizationRequest request, CancellationToken cancellationToken = default)
     {
         ValidateNameAndCode(request.Name, request.Slug, request.PrimaryBranchName, request.PrimaryBranchCode);
+        ValidateBranchSettings(request.OpeningHoursJson, request.TaxSettingsJson, request.KitchenRouting);
         var slug = request.Slug.Trim().ToLowerInvariant();
         if (await repository.SlugExistsAsync(slug, cancellationToken))
             throw new InvalidOperationException("Organization slug already exists.");
@@ -51,6 +53,7 @@ public class OrganizationService(IOrganizationRepository repository) : IOrganiza
     {
         if (string.IsNullOrWhiteSpace(request.Name))
             throw new InvalidOperationException("Branch name is required.");
+        ValidateBranchSettings(request.OpeningHoursJson, request.TaxSettingsJson, request.KitchenRouting);
 
         var branch = await repository.GetBranchByIdAsync(branchId, cancellationToken);
         if (branch is null || branch.OrganizationId != organizationId)
@@ -70,6 +73,7 @@ public class OrganizationService(IOrganizationRepository repository) : IOrganiza
     public async Task<BranchDto?> AddBranchAsync(Guid organizationId, CreateBranchRequest request, CancellationToken cancellationToken = default)
     {
         ValidateNameAndCode(request.Name, request.Code, request.Name, request.Code);
+        ValidateBranchSettings(request.OpeningHoursJson, request.TaxSettingsJson, request.KitchenRouting);
         var organization = await repository.GetByIdAsync(organizationId, cancellationToken);
         if (organization is null) return null;
         var normalizedCode = request.Code.Trim().ToUpperInvariant();
@@ -86,6 +90,24 @@ public class OrganizationService(IOrganizationRepository repository) : IOrganiza
         return Map(branch);
     }
 
+    public async Task<IReadOnlyList<OrganizationMembershipDto>> GetMembershipsAsync(Guid organizationId, CancellationToken cancellationToken = default) =>
+        (await repository.GetMembershipsAsync(organizationId, cancellationToken)).Select(MapMembership).ToList();
+
+    public async Task<OrganizationMembershipDto?> UpdateMembershipAsync(Guid organizationId, Guid membershipId, UpdateOrganizationMembershipRequest request, CancellationToken cancellationToken = default)
+    {
+        var role = request.Role.Trim().ToLowerInvariant();
+        if (role is not ("owner" or "manager" or "finance" or "member"))
+            throw new InvalidOperationException("Organization role must be owner, manager, finance, or member.");
+        var memberships = await repository.GetMembershipsAsync(organizationId, cancellationToken);
+        var current = memberships.SingleOrDefault(item => item.Id == membershipId);
+        if (current is null) return null;
+        if (current.IsActive && current.Role == "owner" && (!request.IsActive || role != "owner") &&
+            memberships.Count(item => item.IsActive && item.Role == "owner") == 1)
+            throw new InvalidOperationException("An organization must keep at least one active owner.");
+        var membership = await repository.UpdateMembershipAsync(organizationId, membershipId, role, request.IsActive, cancellationToken);
+        return membership is null ? null : MapMembership(membership);
+    }
+
     private static void ValidateNameAndCode(string name, string slug, string branchName, string branchCode)
     {
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(branchName))
@@ -96,10 +118,51 @@ public class OrganizationService(IOrganizationRepository repository) : IOrganiza
             throw new InvalidOperationException("Branch code is required.");
     }
 
+    private static void ValidateBranchSettings(string? openingHoursJson, string? taxSettingsJson, string? kitchenRouting)
+    {
+        ValidateJsonObject(openingHoursJson, "Opening hours");
+        if (!string.IsNullOrWhiteSpace(taxSettingsJson))
+        {
+            using var tax = ParseJsonObject(taxSettingsJson, "Tax settings");
+            if (tax.RootElement.TryGetProperty("vatRate", out var rate) &&
+                (!rate.TryGetDecimal(out var value) || value is < 0m or > 100m))
+                throw new InvalidOperationException("Tax vatRate must be a number from 0 to 100.");
+        }
+        if (kitchenRouting?.Trim().Length > 100)
+            throw new InvalidOperationException("Kitchen routing must be 100 characters or fewer.");
+    }
+
+    private static void ValidateJsonObject(string? json, string label)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return;
+        using var _ = ParseJsonObject(json, label);
+    }
+
+    private static JsonDocument ParseJsonObject(string json, string label)
+    {
+        try
+        {
+            var document = JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                document.Dispose();
+                throw new InvalidOperationException($"{label} must be a JSON object.");
+            }
+            return document;
+        }
+        catch (JsonException)
+        {
+            throw new InvalidOperationException($"{label} contains invalid JSON.");
+        }
+    }
+
     private static OrganizationDto Map(Organization organization) => new(
         organization.Id, organization.Name, organization.Slug, organization.LegalName, organization.TaxId,
         organization.CurrencyCode, organization.TimeZone, organization.IsActive,
         organization.Branches.OrderBy(e => e.Name).Select(Map).ToList());
 
     private static BranchDto Map(Branch branch) => new(branch.Id, branch.Name, branch.Code, branch.Address, branch.City, branch.Phone, branch.IsActive, branch.OpeningHoursJson, branch.TaxSettingsJson, branch.KitchenRouting);
+    private static OrganizationMembershipDto MapMembership(OrganizationMembership item) => new(item.Id, item.UserId,
+        string.IsNullOrWhiteSpace(item.User.Name) ? item.User.UserName ?? item.UserId.ToString() : item.User.Name,
+        item.User.Email, item.Role, item.IsActive, item.User.Employee?.BranchId, item.User.Employee?.Branch?.Name);
 }

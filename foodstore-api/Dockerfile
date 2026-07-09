@@ -17,5 +17,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app .
+RUN groupadd --system --gid 1001 foodstore && useradd --system --uid 1001 --gid foodstore foodstore
+USER foodstore
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "FoodstoreApi.Web.dll"]

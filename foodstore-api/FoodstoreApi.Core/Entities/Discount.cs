@@ -3,6 +3,8 @@
 public partial class Discount : IAuditableEntity
 {
     public Guid Id { get; set; }
+    public Guid? BranchId { get; set; }
+    public virtual Branch? Branch { get; set; }
     public string Code { get; set; } = null!;
     public string Name { get; set; } = null!;
     public string Type { get; set; } = null!;

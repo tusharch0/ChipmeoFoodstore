@@ -13,7 +13,7 @@ namespace FoodstoreApi.Web.Controllers;
 [ApiController]
 [Route("api/admin/sources")]
 [Authorize]
-public class SourcesController(ISourceService service, IHubContext<AppHub> hubContext) : ControllerBase
+public class SourcesController(ISourceService service, IHubContext<AppHub> hubContext, ITenantContext tenantContext) : ControllerBase
 {
     private readonly ISourceService _service = service;
     private readonly IHubContext<AppHub> _hubContext = hubContext;
@@ -42,7 +42,7 @@ public class SourcesController(ISourceService service, IHubContext<AppHub> hubCo
     public async Task<IActionResult> Create([FromBody] CreateSourceDto dto, CancellationToken cancellationToken)
     {
         var created = await _service.CreateAsync(dto, cancellationToken);
-        await _hubContext.Clients.All.SendAsync("ReceiveSourceUpdate", cancellationToken);
+        await NotifyBranchAsync(dto.BranchId, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
@@ -52,7 +52,7 @@ public class SourcesController(ISourceService service, IHubContext<AppHub> hubCo
     {
         var ok = await _service.UpdateAsync(id, dto, cancellationToken);
         if (!ok) return ApiResult.NotFound();
-        await _hubContext.Clients.All.SendAsync("ReceiveSourceUpdate", cancellationToken);
+        await NotifyBranchAsync(dto.BranchId, cancellationToken);
         return NoContent();
     }
 
@@ -64,13 +64,21 @@ public class SourcesController(ISourceService service, IHubContext<AppHub> hubCo
         {
             var ok = await _service.DeleteAsync(id, cancellationToken);
             if (!ok) return ApiResult.NotFound();
-            await _hubContext.Clients.All.SendAsync("ReceiveSourceUpdate", cancellationToken);
+            await NotifyBranchAsync(null, cancellationToken);
             return NoContent();
         }
         catch (Exception)
         {
             return ApiResult.BadRequest("Không thể xóa nguồn này vì đang có đơn hàng liên kết.");
         }
+    }
+
+    private Task NotifyBranchAsync(Guid? requestedBranchId, CancellationToken cancellationToken)
+    {
+        var branchId = tenantContext.IsPlatformOperator ? requestedBranchId : tenantContext.BranchId;
+        return branchId.HasValue
+            ? _hubContext.Clients.Group(TenantHubGroups.Branch(branchId.Value)).SendAsync("ReceiveSourceUpdate", cancellationToken)
+            : Task.CompletedTask;
     }
 }
 
