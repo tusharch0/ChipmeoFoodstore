@@ -84,6 +84,7 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${DB_PASSWORD}"
       ConnectionStrings__Redis: "redis:6379"
+      Cache__Provider: ${CACHE_PROVIDER:-Redis}
       S3__Endpoint: "http://rustfs:9000"
       S3__AccessKey: ${S3_ACCESS_KEY}
       S3__SecretKey: ${S3_SECRET_KEY}

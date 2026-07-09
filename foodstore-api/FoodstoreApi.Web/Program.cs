@@ -72,12 +72,22 @@ builder.Services.AddDbContext<StoreDbContext>((sp, options) =>
     options.UseNpgsql(connectionString)
            .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
 
-var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? throw new InvalidOperationException("Connection string 'Redis' not found.");
-builder.Services.AddStackExchangeRedisCache(options =>
+var cacheProvider = builder.Configuration["Cache:Provider"] ?? "Redis";
+
+if (cacheProvider.Equals("Memory", StringComparison.OrdinalIgnoreCase))
 {
-    options.Configuration = redisConnection;
-    options.InstanceName = "foodstore:";
-});
+    builder.Services.AddDistributedMemoryCache();
+}
+else
+{
+    var redisConnection = builder.Configuration.GetConnectionString("Redis")
+        ?? throw new InvalidOperationException("Connection string 'Redis' not found.");
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnection;
+        options.InstanceName = "foodstore:";
+    });
+}
 
 builder.Services.AddSingleton<IAmazonS3>(sp =>
 {
