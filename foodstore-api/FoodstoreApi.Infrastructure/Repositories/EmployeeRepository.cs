@@ -19,6 +19,8 @@ public class EmployeeRepository : IEmployeeRepository
         return await _context.Employees
             .Include(e => e.User)
             .Include(e => e.Role)
+            .Include(e => e.Branch!)
+                .ThenInclude(e => e.Organization)
             .ToListAsync(cancellationToken);
     }
 
@@ -27,6 +29,8 @@ public class EmployeeRepository : IEmployeeRepository
         return await _context.Employees
             .Include(e => e.User)
             .Include(e => e.Role)
+            .Include(e => e.Branch!)
+                .ThenInclude(e => e.Organization)
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
@@ -35,6 +39,8 @@ public class EmployeeRepository : IEmployeeRepository
         return await _context.Employees
             .Include(e => e.User)
             .Include(e => e.Role)
+            .Include(e => e.Branch!)
+                .ThenInclude(e => e.Organization)
             .FirstOrDefaultAsync(e => e.UserId == userId, cancellationToken);
     }
 
@@ -43,6 +49,8 @@ public class EmployeeRepository : IEmployeeRepository
         return await _context.Employees
             .Include(e => e.User)
             .Include(e => e.Role)
+            .Include(e => e.Branch!)
+                .ThenInclude(e => e.Organization)
             .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode, cancellationToken);
     }
 

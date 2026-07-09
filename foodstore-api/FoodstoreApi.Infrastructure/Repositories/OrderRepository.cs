@@ -53,7 +53,7 @@ public class OrderRepository(StoreDbContext context) : IOrderRepository
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var order = await _context.Orders.FindAsync(new object[] { id }, cancellationToken);
+        var order = await _context.Orders.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         if (order == null) return false;
 
         _context.Orders.Remove(order);

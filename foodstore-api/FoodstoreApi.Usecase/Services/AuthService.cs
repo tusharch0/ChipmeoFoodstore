@@ -18,12 +18,14 @@ public class AuthService(
     RoleManager<ApplicationRole> roleManager,
     SignInManager<ApplicationUser> signInManager,
     IEmployeeRepository employeeRepository,
+    IOrganizationRepository organizationRepository,
     IOptions<JwtSettings> jwtOptions) : IAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly RoleManager<ApplicationRole> _roleManager = roleManager;
     private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
     private readonly IEmployeeRepository _employeeRepository = employeeRepository;
+    private readonly IOrganizationRepository _organizationRepository = organizationRepository;
     private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -45,6 +47,14 @@ public class AuthService(
         await _employeeRepository.UpdateAsync(employee, cancellationToken);
 
         var role = await _roleManager.FindByIdAsync(employee.RoleId.ToString());
+        var isPlatformOperator = string.Equals(role?.Name, "root", StringComparison.OrdinalIgnoreCase);
+        if (!isPlatformOperator && employee.Branch?.Organization is { IsActive: true } organization)
+        {
+            var hasMembership = await _organizationRepository.HasActiveMembershipAsync(user.Id, organization.Id, cancellationToken);
+            if (!hasMembership)
+                return null;
+        }
+
         var permissionClaims = role != null
             ? await _roleManager.GetClaimsAsync(role)
             : new List<Claim>();
@@ -54,7 +64,7 @@ public class AuthService(
             .Select(c => c.Value)
             .ToList();
 
-        var token = GenerateJwtToken(user, employee, permissions);
+        var token = GenerateJwtToken(user, employee, permissions, isPlatformOperator);
         var expiresIn = _jwtSettings.ExpiryInHours * 3600;
 
         return new LoginResponse
@@ -196,7 +206,7 @@ public class AuthService(
         };
     }
 
-    private string GenerateJwtToken(ApplicationUser user, Employee employee, List<string> permissions)
+    private string GenerateJwtToken(ApplicationUser user, Employee employee, List<string> permissions, bool isPlatformOperator)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -210,7 +220,14 @@ public class AuthService(
             new(ClaimTypes.Role, employee.Role?.Name ?? "User"),
             new("EmployeeId", employee.Id.ToString()),
             new("RoleId", employee.RoleId.ToString()),
+            new("is_platform_operator", isPlatformOperator.ToString()),
         };
+
+        if (employee.Branch is not null)
+        {
+            claims.Add(new Claim("branch_id", employee.Branch.Id.ToString()));
+            claims.Add(new Claim("organization_id", employee.Branch.OrganizationId.ToString()));
+        }
 
         foreach (var permission in permissions)
             claims.Add(new Claim("permission", permission));

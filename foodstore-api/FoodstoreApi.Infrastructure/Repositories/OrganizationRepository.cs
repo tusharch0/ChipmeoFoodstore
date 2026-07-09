@@ -19,6 +19,11 @@ public class OrganizationRepository(StoreDbContext context) : IOrganizationRepos
     public Task<bool> UserExistsAsync(Guid userId, CancellationToken cancellationToken = default) =>
         context.Users.AnyAsync(e => e.Id == userId, cancellationToken);
 
+    public Task<bool> HasActiveMembershipAsync(Guid userId, Guid organizationId, CancellationToken cancellationToken = default) =>
+        context.OrganizationMemberships.AnyAsync(
+            e => e.UserId == userId && e.OrganizationId == organizationId && e.IsActive,
+            cancellationToken);
+
     public async Task<Organization> CreateAsync(Organization organization, CancellationToken cancellationToken = default)
     {
         context.Organizations.Add(organization);

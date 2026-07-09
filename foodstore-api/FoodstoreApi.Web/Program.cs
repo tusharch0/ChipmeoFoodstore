@@ -22,6 +22,8 @@ using Microsoft.OpenApi;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FoodstoreApi.Web.Seed;
+using FoodstoreApi.Web.Tenancy;
+using FoodstoreApi.Usecase.Interfaces;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -67,6 +69,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();
 builder.Services.AddDbContext<StoreDbContext>((sp, options) =>
     options.UseNpgsql(connectionString)

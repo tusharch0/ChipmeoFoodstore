@@ -35,6 +35,7 @@ public static class CacheKeys
     public static class Sources
     {
         public static string All => "sources:all";
+        public static string AllForScope(string scope) => $"sources:all:{scope}";
         public static string ById(Guid id) => $"sources:{id}";
     }
 

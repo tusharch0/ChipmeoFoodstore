@@ -14,7 +14,8 @@ public class OrderService(
     ISourceRepository sourceRepo,
     IPaymentRepository paymentRepo,
     IPaymentSettingService paymentSettingService,
-    ICustomerService customerService) : IOrderService
+    ICustomerService customerService,
+    ITenantContext tenantContext) : IOrderService
 {
     private readonly IOrderRepository _orderRepo = orderRepo;
     private readonly IDiscountRepository _discountRepo = discountRepo;
@@ -25,6 +26,7 @@ public class OrderService(
     private readonly IPaymentRepository _paymentRepo = paymentRepo;
     private readonly IPaymentSettingService _paymentSettingService = paymentSettingService;
     private readonly ICustomerService _customerService = customerService;
+    private readonly ITenantContext _tenantContext = tenantContext;
 
     public async Task<IEnumerable<OrderDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -41,6 +43,14 @@ public class OrderService(
     public async Task<OrderDto> CreateAsync(CreateOrderDto dto, Guid employeeId, CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
+        if (!_tenantContext.IsSystem && !_tenantContext.IsPlatformOperator && !_tenantContext.BranchId.HasValue)
+            throw new InvalidOperationException("An active branch is required to create an order.");
+
+        var source = dto.SourceId.HasValue
+            ? await _sourceRepo.GetByIdAsync(dto.SourceId.Value, cancellationToken)
+            : null;
+        if (dto.SourceId.HasValue && source is null)
+            throw new InvalidOperationException("Order source was not found in the active branch.");
         
         var details = await CalculateOrderDetailsAsync(dto, cancellationToken);
         
@@ -58,6 +68,7 @@ public class OrderService(
         {
             OrderCode = orderCode,
             SourceId = dto.SourceId,
+            BranchId = source?.BranchId ?? _tenantContext.BranchId,
             EmployeeId = employeeId,
             DiscountId = details.Discount?.Id,
             CustomerId = dto.CustomerId,
@@ -94,6 +105,14 @@ public class OrderService(
         if (order == null) throw new Exception("Order not found");
         if (order.Status != OrderStatus.Pending) throw new Exception($"Cannot update order in status {order.Status}");
 
+        Source? source = null;
+        if (dto.SourceId != order.SourceId && dto.SourceId.HasValue)
+        {
+            source = await _sourceRepo.GetByIdAsync(dto.SourceId.Value, cancellationToken);
+            if (source is null)
+                throw new InvalidOperationException("Order source was not found in the active branch.");
+        }
+
         var now = DateTime.UtcNow;
         var details = await CalculateOrderDetailsAsync(dto, cancellationToken);
         
@@ -119,6 +138,8 @@ public class OrderService(
         
         // Update Fields
         order.SourceId = dto.SourceId;
+        if (source is not null)
+            order.BranchId = source.BranchId;
         order.CustomerId = dto.CustomerId;
         order.Note = dto.Note;
         

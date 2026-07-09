@@ -1,5 +1,6 @@
 ﻿using FoodstoreApi.Core.Entities;
 using FoodstoreApi.Core.Entities.Identity;
+using FoodstoreApi.Usecase.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -8,9 +9,17 @@ namespace FoodstoreApi.Infrastructure.Data;
 
 public partial class StoreDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
 {
+    private readonly ITenantContext? _tenantContext;
+
     public StoreDbContext() { }
 
-    public StoreDbContext(DbContextOptions<StoreDbContext> options) : base(options) { }
+    public StoreDbContext(DbContextOptions<StoreDbContext> options, ITenantContext? tenantContext = null) : base(options)
+    {
+        _tenantContext = tenantContext;
+    }
+
+    public Guid? CurrentBranchId => _tenantContext?.BranchId;
+    public bool BypassTenantFilter => _tenantContext is null || _tenantContext.IsSystem || _tenantContext.IsPlatformOperator;
 
     public virtual DbSet<Employee> Employees => Set<Employee>();
     public virtual DbSet<Organization> Organizations => Set<Organization>();
@@ -338,6 +347,7 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.ConfigureAudit();
             entity.HasIndex(e => e.BranchId);
             entity.HasOne(e => e.Branch).WithMany(e => e.Sources).HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
         });
 
         // Orders
@@ -370,6 +380,7 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
                 .WithMany(e => e.Orders)
                 .HasForeignKey(e => e.BranchId)
                 .OnDelete(DeleteBehavior.SetNull);
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
 
             entity.HasOne(e => e.Source)
                 .WithMany(s => s.Orders)
@@ -775,6 +786,8 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
                 .WithMany()
                 .HasForeignKey(e => e.ProviderId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.Order.BranchId == CurrentBranchId));
         });
 
         // E-Invoice Settings

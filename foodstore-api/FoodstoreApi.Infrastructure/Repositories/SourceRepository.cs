@@ -21,7 +21,7 @@ public class SourceRepository : ISourceRepository
 
     public async Task<Source?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Sources.FindAsync(new object[] { id }, cancellationToken);
+        return await _context.Sources.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
     public async Task<Source> CreateAsync(Source source, CancellationToken cancellationToken = default)
@@ -39,7 +39,7 @@ public class SourceRepository : ISourceRepository
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var source = await _context.Sources.FindAsync(new object[] { id }, cancellationToken);
+        var source = await _context.Sources.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         if (source == null) return false;
         
         _context.Sources.Remove(source);
