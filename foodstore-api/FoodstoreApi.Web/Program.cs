@@ -111,8 +111,10 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
 });
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
+builder.Services.Configure<IntaSendOptions>(builder.Configuration.GetSection(IntaSendOptions.SectionName));
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
+builder.Services.AddHostedService<FoodstoreApi.Web.BackgroundServices.PaymentEventWorker>();
 
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
     ?? throw new InvalidOperationException("JwtSettings not configured");

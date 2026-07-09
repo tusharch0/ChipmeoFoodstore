@@ -53,6 +53,8 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
     public virtual DbSet<EInvoiceProvider> EInvoiceProviders => Set<EInvoiceProvider>();
     public virtual DbSet<EInvoice> EInvoices => Set<EInvoice>();
     public virtual DbSet<EInvoiceSetting> EInvoiceSettings => Set<EInvoiceSetting>();
+    public virtual DbSet<PaymentIntent> PaymentIntents => Set<PaymentIntent>();
+    public virtual DbSet<PaymentEvent> PaymentEvents => Set<PaymentEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -807,6 +809,66 @@ public partial class StoreDbContext : IdentityDbContext<ApplicationUser, Applica
             entity.HasOne(e => e.DefaultProvider)
                 .WithMany()
                 .HasForeignKey(e => e.DefaultProviderId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Payment Intents
+        modelBuilder.Entity<PaymentIntent>(entity =>
+        {
+            entity.ToTable("payment_intents");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.OrderId).HasColumnName("order_id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
+            entity.Property(e => e.Amount).HasColumnType("decimal(12,2)").HasColumnName("amount");
+            entity.Property(e => e.Currency).HasMaxLength(3).HasColumnName("currency").HasDefaultValue("KES");
+            entity.Property(e => e.Provider).HasMaxLength(30).HasColumnName("provider");
+            entity.Property(e => e.ProviderReference).HasMaxLength(120).HasColumnName("provider_reference");
+            entity.Property(e => e.CheckoutId).HasMaxLength(120).HasColumnName("checkout_id");
+            entity.Property(e => e.IdempotencyKey).HasMaxLength(120).HasColumnName("idempotency_key");
+            entity.Property(e => e.Status).HasMaxLength(20).HasColumnName("status");
+            entity.Property(e => e.CustomerPhone).HasMaxLength(30).HasColumnName("customer_phone");
+            entity.Property(e => e.FailureReason).HasMaxLength(500).HasColumnName("failure_reason");
+            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
+            entity.ConfigureAudit();
+
+            entity.HasIndex(e => e.IdempotencyKey).IsUnique();
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => new { e.Provider, e.ProviderReference });
+            entity.HasIndex(e => e.BranchId);
+
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasQueryFilter(e => BypassTenantFilter || (CurrentBranchId.HasValue && e.BranchId == CurrentBranchId));
+        });
+
+        // Payment Events (webhook/callback store + durable queue)
+        modelBuilder.Entity<PaymentEvent>(entity =>
+        {
+            entity.ToTable("payment_events");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.PaymentIntentId).HasColumnName("payment_intent_id");
+            entity.Property(e => e.Provider).HasMaxLength(30).HasColumnName("provider");
+            entity.Property(e => e.ProviderEventId).HasMaxLength(160).HasColumnName("provider_event_id");
+            entity.Property(e => e.EventType).HasMaxLength(50).HasColumnName("event_type");
+            entity.Property(e => e.SignatureValid).HasColumnName("signature_valid");
+            entity.Property(e => e.PayloadJson).HasColumnName("payload_json");
+            entity.Property(e => e.ReceivedAt).HasColumnName("received_at");
+            entity.Property(e => e.ProcessedAt).HasColumnName("processed_at");
+            entity.Property(e => e.ProcessingOutcome).HasMaxLength(50).HasColumnName("processing_outcome");
+            entity.Property(e => e.Attempts).HasColumnName("attempts");
+            entity.ConfigureAudit();
+
+            entity.HasIndex(e => new { e.Provider, e.ProviderEventId }).IsUnique();
+            entity.HasIndex(e => e.ProcessingOutcome);
+
+            entity.HasOne(e => e.PaymentIntent)
+                .WithMany(p => p.Events)
+                .HasForeignKey(e => e.PaymentIntentId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 

@@ -142,6 +142,10 @@ export const API_ENDPOINTS = {
 		recommendations: `${API_BASE_URL}/api/admin/dashboard/recommendations`
 	},
 	paymentSettings: `${API_BASE_URL}/api/admin/payment-settings`,
+	payments: {
+		createIntent: `${API_BASE_URL}/api/pos/payments`,
+		intent: (id: string) => `${API_BASE_URL}/api/pos/payments/${id}`
+	},
 	kitchen: {
 		list: `${API_BASE_URL}/api/kitchen/orders`,
 		start: (id: number) => `${API_BASE_URL}/api/kitchen/orders/${id}/start`,

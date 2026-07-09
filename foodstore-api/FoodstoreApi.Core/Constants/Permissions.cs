@@ -74,6 +74,11 @@ public static class Permissions
         new("payment.update", "Cập nhật thanh toán",      "Có thể thêm/sửa tài khoản ngân hàng",     "payment"),
         new("payment.delete", "Xóa cài đặt thanh toán",   "Có thể xóa tài khoản ngân hàng",          "payment"),
 
+        // Payment transactions (finance support)
+        new("payment.transactions.view", "View payment transactions", "Can search and view payment intents and webhook history", "payment"),
+        new("payment.refund",            "Refund payments",           "Can initiate refunds on succeeded payments",             "payment"),
+        new("payment.support",           "Payment support console",   "Can access the finance payment support console",         "payment"),
+
         // System
         new("system.view",   "Xem cài đặt hệ thống",       "Có thể xem cấu hình hệ thống",            "system"),
         new("system.update", "Cập nhật cài đặt hệ thống",  "Có thể thay đổi cấu hình hệ thống",       "system"),

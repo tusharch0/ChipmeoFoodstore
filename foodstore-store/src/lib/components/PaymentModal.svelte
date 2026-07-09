@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import Modal from './ui/Modal.svelte';
 	import Button from './ui/Button.svelte';
 	import { formatCurrency, formatTime } from '$lib/utils/index.js';
 	import type { Order } from '$lib/types/index.js';
-	import { posAPI, ordersAPI, api } from '$lib/api/index.js';
+	import { ordersAPI, api, createPaymentIntent, getPaymentIntent } from '$lib/api/index.js';
+	import type { PaymentIntent } from '$lib/api/payments.js';
 	import { API_ENDPOINTS } from '$lib/config/index.js';
 	import Icon from './ui/Icon.svelte';
 
@@ -19,11 +20,16 @@
 	} = $props();
 
 	let processing = $state(false);
-	let paymentMethod = $state<'cash' | 'qr' | 'momo' | 'zalopay'>('cash');
+	let paymentMethod = $state<'cash' | 'qr' | 'mpesa'>('cash');
 	let cashReceived = $state(0);
 	let success = $state(false);
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let paymentSettings = $state<any>(null);
+	let mpesaPhone = $state('');
+	let mpesaIntent = $state<PaymentIntent | null>(null);
+	let mpesaError = $state('');
+	let mpesaTimedOut = $state(false);
+	let pollTimer: ReturnType<typeof setInterval> | undefined;
 
 	onMount(async () => {
 		try {
@@ -41,8 +47,14 @@
 			paymentMethod = 'cash';
 			cashReceived = 0;
 			processing = false;
+			mpesaPhone = order.customerPhone || '';
+			mpesaIntent = null;
+			mpesaError = '';
+			mpesaTimedOut = false;
 		}
 	});
+
+	onDestroy(() => pollTimer && clearInterval(pollTimer));
 
 	/**
 	 * Handles the payment confirmation process.
@@ -72,6 +84,56 @@
 		} catch (err: any) {
 			console.error('[PaymentModal] Payment failed:', err);
 			alert('Payment error: ' + (err.message || 'Unable to connect to server.'));
+		} finally {
+			processing = false;
+		}
+	}
+
+	function stopPolling() {
+		if (pollTimer) clearInterval(pollTimer);
+		pollTimer = undefined;
+	}
+
+	async function pollMpesaIntent() {
+		if (!mpesaIntent) return;
+		try {
+			mpesaIntent = await getPaymentIntent(mpesaIntent.id);
+			if (mpesaIntent.status === 'succeeded') {
+				stopPolling();
+				success = true;
+				onPaymentComplete();
+			} else if (['failed', 'expired', 'cancelled'].includes(mpesaIntent.status)) {
+				stopPolling();
+			}
+		} catch (err) {
+			mpesaError = err instanceof Error ? err.message : 'Unable to check the M-Pesa payment status.';
+		}
+	}
+
+	async function startMpesaPayment() {
+		if (!order || !mpesaPhone.trim() || processing) return;
+		processing = true;
+		mpesaError = '';
+		mpesaTimedOut = false;
+		try {
+			mpesaIntent = await createPaymentIntent(order.id, mpesaPhone.trim(), crypto.randomUUID(), order.customerName);
+			if (mpesaIntent.status === 'failed') {
+				mpesaError = mpesaIntent.failureReason || 'The M-Pesa request could not be created.';
+				return;
+			}
+			stopPolling();
+			const startedAt = Date.now();
+			pollTimer = setInterval(() => {
+				if (Date.now() - startedAt > 120000) {
+					mpesaTimedOut = true;
+					stopPolling();
+					return;
+				}
+				void pollMpesaIntent();
+			}, 3000);
+			await pollMpesaIntent();
+		} catch (err) {
+			mpesaError = err instanceof Error ? err.message : 'Unable to start the M-Pesa payment.';
 		} finally {
 			processing = false;
 		}
@@ -232,21 +294,12 @@
 
 					<button
 						class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all {paymentMethod ===
-						'momo'
-							? 'bg-white text-pink-600 shadow-sm'
+						'mpesa'
+							? 'bg-white text-green-600 shadow-sm'
 							: 'text-gray-500 hover:text-gray-700'}"
-						onclick={() => (paymentMethod = 'momo')}
+						onclick={() => (paymentMethod = 'mpesa')}
 					>
 						👛 Momo
-					</button>
-					<button
-						class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all {paymentMethod ===
-						'zalopay'
-							? 'bg-white text-blue-600 shadow-sm'
-							: 'text-gray-500 hover:text-gray-700'}"
-						onclick={() => (paymentMethod = 'zalopay')}
-					>
-						ZaloPay
 					</button>
 				</div>
 
@@ -392,16 +445,25 @@
 							</div>
 						{/if}
 					</div>
-				{:else if paymentMethod === 'momo' || paymentMethod === 'zalopay'}
+				{:else if paymentMethod === 'mpesa'}
 					<div
 						class="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-gray-200 bg-gray-50"
 					>
 						<div class="mb-4 text-4xl">🚧</div>
-						<h3 class="mb-2 text-lg font-bold text-gray-900">Integration coming soon</h3>
+						<h3 class="mb-2 text-lg font-bold text-gray-900">M-Pesa payment</h3>
 						<p class="max-w-xs text-center text-gray-500">
-							Payment via {paymentMethod === 'momo' ? 'Momo' : 'ZaloPay'} is under development. Please
-							choose another method.
+							Enter your M-Pesa number below to receive an STK prompt. Your order is released only when IntaSend confirms the payment.
 						</p>
+						<input id="mpesaPhone" bind:value={mpesaPhone} placeholder="e.g. 2547XXXXXXXX" inputmode="tel" class="w-full max-w-xs rounded-lg border border-gray-300 bg-white p-3" disabled={mpesaIntent?.status === 'pending'} />
+						{#if mpesaIntent?.status === 'pending'}
+							<p class="mt-3 text-center text-sm text-green-800">STK prompt sent. Confirm it on the phone.</p>
+						{:else if mpesaTimedOut}
+							<p class="mt-3 text-center text-sm text-amber-700">No confirmation yet. Retry to send a new prompt.</p>
+						{:else if mpesaError || mpesaIntent?.failureReason}
+							<p class="mt-3 text-center text-sm text-red-600">{mpesaError || mpesaIntent?.failureReason}</p>
+						{/if}
+						{#if mpesaIntent?.providerReference}<p class="mt-2 text-xs text-gray-500">Reference: {mpesaIntent.providerReference}</p>{/if}
+						<Button variant="primary" fullWidth={true} onclick={startMpesaPayment} disabled={processing || !mpesaPhone.trim() || mpesaIntent?.status === 'pending'}>{mpesaIntent?.status === 'pending' ? 'Waiting for confirmation…' : 'Send M-Pesa prompt'}</Button>
 					</div>
 				{:else}
 					<div class="flex min-h-[300px] flex-col items-center justify-center">
@@ -434,8 +496,7 @@
 						onclick={handleConfirmPayment}
 						disabled={processing ||
 							(paymentMethod === 'cash' && cashReceived < order.totalAmount) ||
-							paymentMethod === 'momo' ||
-							paymentMethod === 'zalopay'}
+							paymentMethod === 'mpesa'}
 					>
 						{processing ? 'Processing...' : 'Confirm Payment Received'}
 					</Button>

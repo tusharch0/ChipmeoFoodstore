@@ -24,6 +24,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPaymentSettingRepository, PaymentSettingRepository>();
         services.AddScoped<IReportRepository, ReportRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IPaymentIntentRepository, PaymentIntentRepository>();
+        services.AddScoped<IPaymentEventRepository, PaymentEventRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IBlogCategoryRepository, BlogCategoryRepository>();
         services.AddScoped<IBlogRevisionRepository, BlogRevisionRepository>();

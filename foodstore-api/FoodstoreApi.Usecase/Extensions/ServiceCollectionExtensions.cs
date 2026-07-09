@@ -34,6 +34,12 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEInvoiceProvider, MisaProvider>();
         services.AddTransient<IEInvoiceProvider, ViettelProvider>();
 
+        // Payments (IntaSend)
+        services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IPaymentProviderFactory, PaymentProviderFactory>();
+        services.AddHttpClient<IntaSendProvider>();
+        services.AddTransient<IPaymentProvider>(sp => sp.GetRequiredService<IntaSendProvider>());
+
         return services;
     }
 }

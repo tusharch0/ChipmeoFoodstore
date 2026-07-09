@@ -24,6 +24,7 @@ import {
   Settings2Icon,
   TruckIcon,
   ClipboardListIcon,
+  CreditCardIcon,
   PercentIcon,
   BookOpenIcon,
   SmartphoneIcon,
@@ -116,8 +117,11 @@ const foodNav: {
   },
   {
     title: "Payment",
-    url: "/admin/food/payment-settings",
-    icon: <ClipboardListIcon />,
+    icon: <CreditCardIcon />,
+    items: [
+      { title: "Transactions", url: "/admin/food/payments/dashboard" },
+      { title: "Payment Settings", url: "/admin/food/payment-settings" },
+    ],
   },
   {
     title: "E-Invoice",

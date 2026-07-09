@@ -786,3 +786,16 @@ export interface EInvoiceDashboard {
   cancelledInvoices: number;
   activeProviders: number;
 }
+
+export interface PaymentIntent {
+  id: string; orderId: string; orderCode?: string; amount: number; currency: string; provider: string;
+  providerReference?: string; checkoutId?: string; status: string; customerPhone?: string;
+  failureReason?: string; expiresAt?: string; createdAt: string; updatedAt: string;
+}
+
+export interface PaymentEvent {
+  id: string; provider: string; providerEventId: string; eventType: string; signatureValid: boolean;
+  processingOutcome?: string; attempts: number; receivedAt: string; processedAt?: string;
+}
+
+export interface PaymentIntentDetail extends PaymentIntent { events: PaymentEvent[] }
